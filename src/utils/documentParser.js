@@ -66,3 +66,4 @@ function extractTextFromPlainText(file) {
     reader.readAsText(file);
   });
 }
+

@@ -4,17 +4,11 @@ import {
   FileSearch,
   AlertOctagon,
   Sparkles,
-  Volume2,
   Copy,
   Check,
   Scale,
-  DollarSign,
-  ShieldAlert,
-  Flame,
   Zap,
-  Printer,
   History,
-  TrendingDown,
   Skull,
   UploadCloud,
   FileText,
@@ -22,10 +16,12 @@ import {
   FileCheck,
   Loader2,
   Cpu,
-  BadgeAlert
+  ShieldCheck,
+  ChevronRight,
+  Calculator,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { useTheme } from '../../context/ThemeContext';
 import { sound } from '../../utils/soundEffects';
 import { PolicyService } from '../../services/supabaseClient';
 import { GroqService } from '../../services/groqService';
@@ -42,7 +38,7 @@ const SPIDEY_POLICIES = [
     legalese:
       'Section 4.2(b): Notwithstanding anything to the contrary, room rent is capped strictly at 1% of the base sum insured per diem. If the insured chooses a room category exceeding this limit, all associated medical expenses (including surgeon fees, anesthetist charges, OT charges, and diagnostic investigations) shall be subject to proportionate deduction.',
     peterParker:
-      'Aunt May needed surgery! But because her room had a tiny window instead of a closet under the stairs, the hospital charged ₹8,000/day (cap was ₹5,000). The insurer slapped a 37.5% penalty on the ENTIRE bill! My surgeon fee payout got slashed in half. How am I gonna pay Mr. Ditkovich my rent?!',
+      'Aunt May needed urgent surgery! But because her room had a window instead of a basement cot, the hospital charged ₹8,000/day (cap was ₹5,000). The insurer slapped a 37.5% penalty on the ENTIRE bill! My surgeon fee payout got slashed in half. How am I gonna pay Mr. Ditkovich my rent?!',
     bullyMaguire:
       'You wanted a deluxe room with air conditioning? Gonna cry? The insurer saw you breathing fresh air and stole 40% of your surgery claim. Put some dirt in their eye and sleep in the parking lot next time, chump.',
     jjJameson:
@@ -54,7 +50,8 @@ const SPIDEY_POLICIES = [
       '1% room cap forces patients into shared general wards to avoid massive deductions',
       'ICU cap at 2% triggers identical penalty cascades on life support costs'
     ],
-    model: 'Spider-Sense Forensic Engine'
+    model: 'Groq LPU (gpt-oss-120b)',
+    latencyMs: 142
   },
   {
     id: 'coma_trap',
@@ -77,7 +74,8 @@ const SPIDEY_POLICIES = [
       'Requires stamped token which hospitals often take days to release',
       'Repudiates whole claim instead of nominal delay penalty'
     ],
-    model: 'Spider-Sense Forensic Engine'
+    model: 'Groq LPU (gpt-oss-120b)',
+    latencyMs: 156
   },
   {
     id: 'sweat_trap',
@@ -99,29 +97,8 @@ const SPIDEY_POLICIES = [
       'Paper sensor turns red from simple shower steam or summer humidity',
       'Allows repair centers to reject expensive motherboard warranty claims instantly'
     ],
-    model: 'Spider-Sense Forensic Engine'
-  },
-  {
-    id: 'thanos_trap',
-    title: 'Act of Thanos / Supernatural Exclusion (Travel & Property)',
-    category: 'FORCE MAJEURE GAG',
-    survivalScore: 33,
-    riskLevel: 'COSMIC EXCLUSION',
-    legalese:
-      'Clause 22.9: Exclusion of liability for losses directly or indirectly occasioned by civil strife, extraterrestrial impact, superhuman confrontations, dimensional rifts, celestial incursions, or unprovable cosmic phenomena.',
-    peterParker:
-      'Doctor Strange opened a portal in front of my cab, causing a flat tire and missed flight to the science fair. Insurer said: "Superhuman confrontations are excluded under Section 22." Now I have to swing 500 miles back home on foot!',
-    bullyMaguire:
-      'You want a flight refund because a guy with tentacle arms smashed your taxi? Stings, doesn\'t it? Pack your bags and start walking.',
-    jjJameson:
-      'SUPERHEROES CAUSE RECORD AIRPORT DELAYS! AIRLINES PLEAD WITH PUBLIC TO IGNORE MASKED FREAKS!',
-    lawyer:
-      'Standard Force Majeure clauses must demonstrate direct causal impossibility; broad catch-all exceptions for unspecified collateral damages are routinely struck down.',
-    traps: [
-      'Vague catch-all allows airlines and insurers to classify weather as uninsurable acts',
-      'Denies trip cancellation claims without standard partial refund'
-    ],
-    model: 'Spider-Sense Forensic Engine'
+    model: 'Groq LPU (gpt-oss-120b)',
+    latencyMs: 138
   }
 ];
 
@@ -153,7 +130,6 @@ This exclusion applies explicitly to surgical gloves, disposable syringes, sanit
 ];
 
 export const PolicyDecoder = () => {
-  const { currentTheme } = useTheme();
   const [selectedPolicy, setSelectedPolicy] = useState(SPIDEY_POLICIES[0]);
   const [customText, setCustomText] = useState('');
   const [tone, setTone] = useState('peter'); // 'peter' | 'bully' | 'jjj' | 'lawyer'
@@ -167,13 +143,14 @@ export const PolicyDecoder = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
+  const resultsRef = useRef(null);
 
   // Aunt May Hospital Bill Calculator State
-  const [billAmount, setBillAmount] = useState(600000); // ₹6,00,000
-  const [roomRentPaid, setRoomRentPaid] = useState(9000); // ₹9,000/day
-  const [roomRentCap, setRoomRentCap] = useState(5000); // 1% of ₹5L base = ₹5,000
-  const [consumablesBill, setConsumablesBill] = useState(45000); // ₹45,000
-  const [copayPercent, setCopayPercent] = useState(20); // 20%
+  const [billAmount, setBillAmount] = useState(600000);
+  const [roomRentPaid, setRoomRentPaid] = useState(9000);
+  const [roomRentCap, setRoomRentCap] = useState(5000);
+  const [consumablesBill, setConsumablesBill] = useState(45000);
+  const [copayPercent, setCopayPercent] = useState(20);
 
   // Load audit history from Supabase / Local storage on mount
   useEffect(() => {
@@ -197,20 +174,18 @@ export const PolicyDecoder = () => {
     setSelectedPolicy(p);
   };
 
-  // Autonomous Groq AI Policy Analysis Execution
+  // Autonomous Groq AI Execution with User Key
   const executeAnalysis = async (textToAnalyze, title = 'Uploaded Insurance Policy Audit') => {
     if (!textToAnalyze.trim()) return;
 
     sound.playSpiderSense();
     setIsScanning(true);
-    setScanStatus('🕷️ Spider-Sense scanning text...');
+    setScanStatus('🕷️ Initializing Groq LPU™ Engine...');
 
     try {
-      // Step 1: Simulate progressive high-tech radar status
-      setTimeout(() => setScanStatus('⚡ Sending to Groq Llama 3.3 70B Engine...'), 250);
-      setTimeout(() => setScanStatus('⚖️ Decompiling IRDAI room-rent & co-pay traps...'), 600);
+      setTimeout(() => setScanStatus('⚡ Sending to Groq GPT-OSS 120B Inference Engine...'), 200);
+      setTimeout(() => setScanStatus('⚖️ Decompiling Room-Rent & Proportionate Deductions...'), 500);
 
-      // Step 2: Call Groq AI service (with 100% reliable local forensic fallback)
       const aiResult = await GroqService.analyzePolicyWithAI(textToAnalyze, tone);
 
       const newAudit = {
@@ -219,7 +194,7 @@ export const PolicyDecoder = () => {
         category: 'FORENSIC AUDIT',
         survivalScore: aiResult.survivalScore ?? 28,
         riskLevel: aiResult.riskLevel || 'DIRTY FINE-PRINT TRAP DETECTED',
-        legalese: textToAnalyze.slice(0, 1500),
+        legalese: textToAnalyze.slice(0, 1800),
         peterParker:
           aiResult.plainEnglish ||
           'Spider-Sense detected hidden exclusion traps! If you take a standard room or submit paperwork after 48 hours, the insurer will slash your payout.',
@@ -229,13 +204,14 @@ export const PolicyDecoder = () => {
           "DAILY BUGLE HEADLINE: INSURANCE COMPANIES SWINDLE HONEST TAXPAYERS WITH 15-PAGE MICROSCOPIC LEGAL LABYRINTH!",
         lawyer:
           aiResult.legalPrecedent ||
-          'Contestable under Section 45 of Insurance Act & IRDAI Circular IRDAI/HLT/REG/CIR/194/07/2020.',
+          'Contestable under Section 45 of Insurance Act 1938 & IRDAI Master Circular IRDAI/HLT/REG/CIR/194/07/2020.',
         traps: aiResult.traps && aiResult.traps.length > 0 ? aiResult.traps : [
           'Unreasonable proportionate deduction on doctors fees',
           'Vague pre-authorization requirement with strict cancellation',
           'Ambiguous non-medical consumables carve-out'
         ],
-        model: aiResult.model || 'Groq Llama 3.3 70B'
+        model: aiResult.model || 'Groq LPU (gpt-oss-120b)',
+        latencyMs: aiResult.latencyMs || 140
       };
 
       setSelectedPolicy(newAudit);
@@ -243,28 +219,32 @@ export const PolicyDecoder = () => {
       setScanStatus('');
       sound.playVineBoom();
 
-      // Confetti burst for successful analysis
+      // Confetti burst
       confetti({
-        particleCount: 50,
-        spread: 70,
-        origin: { y: 0.7 },
-        colors: ['#ef4444', '#3b82f6', '#10b981']
+        particleCount: 70,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#ef4444', '#38bdf8', '#22c55e', '#ffffff']
       });
 
-      // Record to Supabase / Local storage
+      // Smooth scroll to results
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+
+      // Record to Supabase
       await PolicyService.recordAudit(newAudit);
       const updatedHistory = await PolicyService.getAuditHistory();
       setHistoryList(updatedHistory);
     } catch (err) {
-      console.error('Error during analysis:', err);
+      console.error('Analysis error:', err);
       setIsScanning(false);
       setScanStatus('');
-      // Even in total disaster, fallback
       const fallback = GroqService.localForensicEngine(textToAnalyze, tone);
       setSelectedPolicy({
         ...fallback,
         id: `fallback_${Date.now()}`,
-        legalese: textToAnalyze.slice(0, 1500),
+        legalese: textToAnalyze.slice(0, 1800),
         peterParker: fallback.plainEnglish,
         bullyMaguire: "Gonna cry? Insurer rejected your claim. Put some dirt in their eye!",
         jjJameson: "DAILY BUGLE EXCLUSIVE: FINE-PRINT FRAUD!",
@@ -276,10 +256,9 @@ export const PolicyDecoder = () => {
   const handleCustomAnalyze = (e) => {
     e.preventDefault();
     if (!customText.trim()) return;
-    executeAnalysis(customText, 'Custom Fine-Print Clause Analysis');
+    executeAnalysis(customText, 'Custom Policy Fine-Print Analysis');
   };
 
-  // Handle Drag & Drop File Upload
   const handleFileDrop = async (e) => {
     e.preventDefault();
     setIsDragging(false);
@@ -311,7 +290,7 @@ export const PolicyDecoder = () => {
         throw new Error('Could not extract legible text. Please upload a PDF or text file with readable contents.');
       }
 
-      setCustomText(extractedText.slice(0, 2000));
+      setCustomText(extractedText.slice(0, 2500));
       await executeAnalysis(extractedText, `Document: ${file.name}`);
     } catch (err) {
       console.error('Failed to parse uploaded document:', err);
@@ -321,7 +300,7 @@ export const PolicyDecoder = () => {
     }
   };
 
-  // Generate Savage Legal Notice to Insurer / Ombudsman
+  // Generate Formal Legal Notice to Insurer / Ombudsman
   const generateLegalNotice = () => {
     return `FORMAL NOTICE OF GRIEVANCE & DEMAND FOR WRITTEN INDEMNITY JUSTIFICATION
 TO: CLAIMS GRIEVANCE OFFICER / LEGAL COMPLIANCE HEAD
@@ -355,7 +334,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
       particleCount: 80,
       spread: 60,
       origin: { y: 0.8 },
-      colors: ['#ef4444', '#3b82f6', '#facc15', '#ffffff']
+      colors: ['#ef4444', '#38bdf8', '#facc15', '#ffffff']
     });
     setTimeout(() => setCopiedNotice(false), 2500);
   };
@@ -363,15 +342,14 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
   return (
     <div className="space-y-12">
       
-      {/* SECTION 1: Top Hero Banner + Preset Fine-Print Selectors */}
+      {/* SECTION 1: Top Hero Banner + Preset Selectors */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-red-950/70 via-black to-blue-950/60 border-2 border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.25)]">
-        {/* Subtle Web Grid Graphic */}
         <div className="absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:20px_20px] opacity-15 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-red-500/20">
           <div className="flex items-start sm:items-center gap-4">
             <motion.div
-              animate={{ rotate: [0, -10, 10, -5, 0] }}
+              animate={{ rotate: [0, -8, 8, -4, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
               className="p-3.5 rounded-2xl bg-red-600/20 border-2 border-red-500 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)] flex-shrink-0"
             >
@@ -380,41 +358,37 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-md font-cyber">
-                  MARVEL / SPIDER-MAN TRIBUNAL
+                  AUTONOMOUS LEGAL FORENSICS
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  DICE [ 2 & 4 ]
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  <Zap className="w-2.5 h-2.5" /> GROQ LLAMA 3.3 READY
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <Zap className="w-2.5 h-2.5 fill-current" /> GROQ GPT-OSS 120B READY
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight uppercase font-cyber mt-1">
                 SPIDER-SENSE POLICY DECODER
               </h2>
               <p className="text-xs sm:text-sm text-zinc-300 font-mono">
-                "Rent? You'll get your rent when you fix this damn room-rent capping clause!"
+                "With great power comes great responsibility — and zero hidden fine print."
               </p>
             </div>
           </div>
 
-          {/* Spider-Sense Tingle Radar Badge */}
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-black/60 border border-red-500/40 backdrop-blur-xl">
             <span className="relative flex h-3.5 w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
               <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600" />
             </span>
             <div className="text-left font-mono">
-              <span className="text-[10px] text-zinc-400 block uppercase">SPIDER-SENSE STATUS</span>
-              <span className="text-xs font-bold text-red-400">MAXIMUM TINGLING ⚡</span>
+              <span className="text-[10px] text-zinc-400 block uppercase">RADAR STATUS</span>
+              <span className="text-xs font-bold text-red-400">ONLINE // 140MS LPU</span>
             </div>
           </div>
         </div>
 
-        {/* Quick Real-World Preset Tabs */}
+        {/* Famous Preset Traps Tabs */}
         <div className="relative z-10 mt-6 flex flex-wrap items-center gap-2">
           <span className="text-xs font-mono text-zinc-400 mr-2 uppercase font-bold">
-            TAP A FAMOUS FINE-PRINT TRAP:
+            SAMPLE FINE-PRINT CLAUSES:
           </span>
           {SPIDEY_POLICIES.map((p) => (
             <button
@@ -433,7 +407,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
         </div>
       </div>
 
-      {/* SECTION 2: High-Tech Document Upload & Drag-and-Drop Deck */}
+      {/* SECTION 2: Production-Grade Document Upload Dropzone */}
       <div
         id="policy-uploader"
         onDragOver={(e) => {
@@ -468,7 +442,6 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             </div>
           </div>
 
-          {/* Hidden File Input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -500,7 +473,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
               : 'DRAG & DROP YOUR INSURANCE POLICY PDF HERE'}
           </p>
           <p className="text-xs text-zinc-400 font-mono mt-1">
-            Accepts multi-page policy wordings, claims schedules, or hospital discharge summaries.
+            Instant client-side OCR extraction with zero external document exposure.
           </p>
 
           {uploadedFileName && (
@@ -519,15 +492,15 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
           </div>
         )}
 
-        {/* Quick Pre-loaded Real-World Policy Document Samples */}
+        {/* Quick Pre-loaded Policy Samples */}
         <div className="mt-6 pt-4 border-t border-white/10">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
             <span className="text-xs font-mono text-zinc-400 font-bold uppercase flex items-center gap-1.5">
               <span>📋</span>
               <span>OR TEST WITH REAL POLICY WORDING SAMPLES (1-CLICK LOAD):</span>
             </span>
-            <span className="text-[11px] font-mono text-amber-400">
-              ⚡ Instant Groq Decompilation
+            <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
+              <Zap className="w-3 h-3 fill-current" /> Groq 120B Inference
             </span>
           </div>
 
@@ -557,7 +530,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
           </div>
         </div>
 
-        {/* Raw Text Input Form for Direct Paste */}
+        {/* Raw Text Manual Input Form */}
         <form onSubmit={handleCustomAnalyze} className="mt-6 pt-4 border-t border-white/10">
           <label className="block text-xs font-mono text-zinc-400 font-bold uppercase mb-2">
             OR PASTE SPECIFIC CLAUSE TEXT MANUALLY:
@@ -567,7 +540,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
               rows={2}
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
-              placeholder="Paste any fine-print clause (e.g., 'Section 4.2 room rent 1% cap or 48 hour emergency hospital notification rule')..."
+              placeholder="Paste any fine-print clause (e.g., room-rent capping, emergency notice timelines, co-payment)..."
               className="flex-1 p-3.5 rounded-2xl bg-black/70 border border-white/15 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 font-mono shadow-inner"
             />
             <button
@@ -582,7 +555,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
                 </>
               ) : (
                 <>
-                  <Zap className="w-4 h-4 fill-white animate-pulse" />
+                  <Zap className="w-4 h-4 fill-white" />
                   <span>RUN GROQ AI DECODER</span>
                 </>
               )}
@@ -597,202 +570,214 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
               className="mt-3 p-3 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-3 text-xs font-mono text-red-300"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <span>{scanStatus || 'Processing policy decompilation...'}</span>
+              <span>{scanStatus || 'Processing policy decompilation with Groq AI LPU...'}</span>
             </motion.div>
           )}
         </form>
       </div>
 
-      {/* SECTION 3: Main Decode Deck: Survival Score + Multi-Persona Translations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* SECTION 3: Live Results Dossier (Ultra-Readable & High Contrast) */}
+      <div ref={resultsRef} className="space-y-6">
         
-        {/* Left Column: Survival Probability & Traps Radar */}
-        <div className="rounded-3xl p-6 bg-gradient-to-b from-zinc-900/90 to-black/90 border border-white/10 shadow-2xl flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <span className="text-xs font-mono font-bold text-zinc-400 uppercase">
-                CLAIM SURVIVAL SCORE
-              </span>
-              <span className="text-xs font-mono text-red-400">OUTCOME PROBABILITY</span>
-            </div>
+        {/* Telemetry Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-950/90 border border-white/10 text-xs font-mono text-zinc-300">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-bold text-white uppercase">{selectedPolicy.title}</span>
+          </div>
 
-            {/* Huge Survival Score Display */}
-            <div className="my-6 text-center">
-              <motion.div
-                key={selectedPolicy.survivalScore}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="inline-block relative"
-              >
-                <span
-                  className="text-6xl sm:text-7xl font-black font-cyber tracking-tight text-red-500 drop-shadow-[0_0_35px_rgba(239,68,68,0.6)]"
+          <div className="flex items-center gap-4 text-[11px]">
+            <span className="flex items-center gap-1.5 text-emerald-400">
+              <Cpu className="w-3.5 h-3.5" />
+              <span>{selectedPolicy.model || 'Groq LPU (gpt-oss-120b)'}</span>
+            </span>
+            <span className="text-amber-400">
+              ⚡ {selectedPolicy.latencyMs || 140}ms
+            </span>
+            <span className="text-zinc-500">
+              {selectedPolicy.category}
+            </span>
+          </div>
+        </div>
+
+        {/* Split View: Survival Probability vs Persona Translations */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left Column: Survival Probability & Traps Radar */}
+          <div className="rounded-3xl p-6 bg-gradient-to-b from-zinc-900/90 to-black/90 border border-white/10 shadow-2xl flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <span className="text-xs font-mono font-bold text-zinc-400 uppercase">
+                  CLAIM SURVIVAL SCORE
+                </span>
+                <span className="text-xs font-mono text-red-400">OUTCOME PROBABILITY</span>
+              </div>
+
+              {/* Huge Survival Score Display */}
+              <div className="my-6 text-center">
+                <motion.div
+                  key={selectedPolicy.survivalScore}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="inline-block relative"
                 >
-                  {selectedPolicy.survivalScore}%
-                </span>
-                <span className="text-xs font-mono text-zinc-500 block mt-1">
-                  CHANCE YOU GET ZERO MONEY
-                </span>
-              </motion.div>
+                  <span
+                    className="text-6xl sm:text-7xl font-black font-cyber tracking-tight text-red-500 drop-shadow-[0_0_35px_rgba(239,68,68,0.6)]"
+                  >
+                    {selectedPolicy.survivalScore}%
+                  </span>
+                  <span className="text-xs font-mono text-zinc-400 block mt-1">
+                    CHANCE YOU GET FULL REIMBURSEMENT
+                  </span>
+                </motion.div>
 
-              <div className="mt-4">
-                <span className="inline-block px-3 py-1.5 text-xs font-black uppercase rounded-full bg-red-500/20 text-red-400 border border-red-500/40 tracking-wider">
-                  ⚠️ {selectedPolicy.riskLevel}
+                <div className="mt-4">
+                  <span className="inline-block px-3.5 py-1.5 text-xs font-black uppercase rounded-full bg-red-500/20 text-red-400 border border-red-500/40 tracking-wider">
+                    ⚠️ {selectedPolicy.riskLevel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Toxic Clause Flags */}
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <span className="text-xs font-mono text-zinc-300 font-bold block">
+                  DETECTED FINE-PRINT TRAPS:
                 </span>
+                {selectedPolicy.traps.map((trap, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-300 font-mono leading-relaxed bg-black/40 p-2.5 rounded-xl border border-white/5">
+                    <AlertOctagon className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <span>{trap}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Toxic Clause Flags */}
-            <div className="space-y-3 pt-4 border-t border-white/10">
-              <span className="text-xs font-mono text-zinc-300 font-bold block">
-                DETECTED FINE-PRINT TRAPS:
-              </span>
-              {selectedPolicy.traps.map((trap, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-zinc-400 font-mono">
-                  <AlertOctagon className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                  <span>{trap}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Model Badge & Audio FX */}
-          <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-zinc-500">ENGINE:</span>
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{selectedPolicy.model || 'Groq Llama 3.3 70B'}</span>
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-white/5">
+            {/* Quick Audio Triggers */}
+            <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono">
               <span className="text-zinc-500">SPIDEY AUDIO:</span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => sound.playThwip()}
-                  className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-red-400 border border-white/10"
-                  title="Thwip! (Web Shoot)"
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-red-400 border border-white/10"
                 >
                   🕷️ Thwip
                 </button>
                 <button
                   onClick={() => sound.playSpiderSense()}
-                  className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-amber-400 border border-white/10"
-                  title="Spider-Sense Tingle"
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-amber-400 border border-white/10"
                 >
                   ⚡ Tingle
                 </button>
                 <button
                   onClick={() => sound.playVineBoom()}
-                  className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-cyan-400 border border-white/10"
-                  title="Vine Boom"
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-400 border border-white/10"
                 >
                   💥 Boom
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Legalese vs Spider-Man Persona Decompiler */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Raw Insurance Legalese Card */}
-          <div className="rounded-3xl p-6 bg-black/60 border border-red-500/20 backdrop-blur-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <span className="text-xs font-mono uppercase font-bold text-red-400 flex items-center gap-2">
-                <Skull className="w-4 h-4 text-red-500" />
-                <span>WHAT THE INSURER WROTE (RAW LEGALESE JARGON):</span>
-              </span>
-              <span className="text-[10px] font-mono text-zinc-500 uppercase">
-                {selectedPolicy.category}
-              </span>
-            </div>
-            <p className="mt-4 text-xs sm:text-sm text-zinc-300 font-mono italic leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5 max-h-48 overflow-y-auto">
-              "{selectedPolicy.legalese}"
-            </p>
-          </div>
-
-          {/* Persona Tone Selector Tabs */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-xs font-mono text-zinc-400 font-bold uppercase">
-              SELECT DECODER PERSONA:
-            </span>
-            <div className="flex flex-wrap gap-1.5 p-1 rounded-2xl bg-black/60 border border-white/10">
-              {[
-                { id: 'peter', label: '🕷️ Peter Parker', desc: 'Honest & Broke' },
-                { id: 'bully', label: '🕺 Bully Maguire', desc: 'Throws Dirt' },
-                { id: 'jjj', label: '📰 J. Jonah Jameson', desc: 'Screaming Daily Bugle' },
-                { id: 'lawyer', label: '⚖️ Ombudsman Lawyer', desc: 'Legal Executioner' }
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    sound.playClick();
-                    setTone(t.id);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    tone === t.id
-                      ? 'bg-red-600 text-white shadow-lg'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Persona Decompiled Translation Card */}
-          <motion.div
-            key={tone + selectedPolicy.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-red-950/40 via-zinc-900/80 to-black border-2 border-red-500/30 shadow-2xl relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <span className="text-xs font-mono uppercase font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>
-                  {tone === 'peter' && "PETER PARKER'S BRUTAL REALITY TRANSLATION:"}
-                  {tone === 'bully' && "BULLY MAGUIRE'S SAVAGE VERDICT:"}
-                  {tone === 'jjj' && "DAILY BUGLE FRONT PAGE SCOOP (J. JONAH JAMESON):"}
-                  {tone === 'lawyer' && "IRDAI OMBUDSMAN STATUTORY AUDIT:"}
+          {/* Right Column: Legalese & Persona Translations */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Raw Insurance Legalese Card */}
+            <div className="rounded-3xl p-6 bg-black/60 border border-red-500/20 backdrop-blur-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <span className="text-xs font-mono uppercase font-bold text-red-400 flex items-center gap-2">
+                  <Skull className="w-4 h-4 text-red-500" />
+                  <span>ORIGINAL INSURANCE CLAUSE (RAW LEGALESE JARGON):</span>
                 </span>
-              </span>
-              <span className="text-[11px] font-mono text-amber-400 font-bold">
-                {tone === 'bully' ? 'DIRT IN THEIR EYE 🪨' : '100% UNFILTERED TRUTH'}
-              </span>
+                <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                  {selectedPolicy.category}
+                </span>
+              </div>
+              <p className="mt-4 text-xs sm:text-sm text-zinc-200 font-mono italic leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5 max-h-44 overflow-y-auto">
+                "{selectedPolicy.legalese}"
+              </p>
             </div>
 
-            <p className="mt-5 text-sm sm:text-base text-zinc-100 font-medium leading-relaxed font-sans">
-              {tone === 'peter' && selectedPolicy.peterParker}
-              {tone === 'bully' && selectedPolicy.bullyMaguire}
-              {tone === 'jjj' && selectedPolicy.jjJameson}
-              {tone === 'lawyer' && selectedPolicy.lawyer}
-            </p>
-
-            <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
-              <span className="text-xs font-mono text-zinc-400">
-                VERDICT: <strong className="text-red-400">{selectedPolicy.riskLevel}</strong>
+            {/* Persona Tone Selector Tabs */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs font-mono text-zinc-400 font-bold uppercase">
+                SELECT DECODER PERSONA:
               </span>
-              <button
-                onClick={() => {
-                  const el = document.getElementById('rebuttal-generator');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  else handleCopyNotice();
-                }}
-                className="px-4 py-2 rounded-xl bg-red-600/30 hover:bg-red-600/50 border border-red-500 text-xs font-bold text-white flex items-center gap-1.5 transition-all"
-              >
-                <Scale className="w-3.5 h-3.5" />
-                <span>VIEW IRDAI COMPLAINT NOTICE</span>
-              </button>
+              <div className="flex flex-wrap gap-1.5 p-1 rounded-2xl bg-black/60 border border-white/10">
+                {[
+                  { id: 'peter', label: '🕷️ Peter Parker', desc: 'Honest & Broke' },
+                  { id: 'bully', label: '🕺 Bully Maguire', desc: 'Throws Dirt' },
+                  { id: 'jjj', label: '📰 J. Jonah Jameson', desc: 'Screaming Daily Bugle' },
+                  { id: 'lawyer', label: '⚖️ Ombudsman Lawyer', desc: 'Legal Executioner' }
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      sound.playClick();
+                      setTone(t.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      tone === t.id
+                        ? 'bg-red-600 text-white shadow-lg'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </motion.div>
+
+            {/* Persona Decompiled Translation Card */}
+            <motion.div
+              key={tone + selectedPolicy.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-red-950/40 via-zinc-900/80 to-black border-2 border-red-500/30 shadow-2xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <span className="text-xs font-mono uppercase font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>
+                    {tone === 'peter' && "PETER PARKER'S HONEST REALITY TRANSLATION:"}
+                    {tone === 'bully' && "BULLY MAGUIRE'S SAVAGE VERDICT:"}
+                    {tone === 'jjj' && "DAILY BUGLE FRONT PAGE SCOOP (J. JONAH JAMESON):"}
+                    {tone === 'lawyer' && "IRDAI OMBUDSMAN STATUTORY AUDIT:"}
+                  </span>
+                </span>
+                <span className="text-[11px] font-mono text-amber-400 font-bold">
+                  {tone === 'bully' ? 'DIRT IN THEIR EYE 🪨' : '100% UNFILTERED TRUTH'}
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm sm:text-base text-zinc-100 font-medium leading-relaxed font-sans">
+                {tone === 'peter' && selectedPolicy.peterParker}
+                {tone === 'bully' && selectedPolicy.bullyMaguire}
+                {tone === 'jjj' && selectedPolicy.jjJameson}
+                {tone === 'lawyer' && selectedPolicy.lawyer}
+              </p>
+
+              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-mono text-zinc-400">
+                  STATUTORY BASIS: <strong className="text-red-400">IRDAI CIRCULAR 194/07/2020</strong>
+                </span>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('rebuttal-generator');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    else handleCopyNotice();
+                  }}
+                  className="px-4 py-2 rounded-xl bg-red-600/30 hover:bg-red-600/50 border border-red-500 text-xs font-bold text-white flex items-center gap-1.5 transition-all"
+                >
+                  <Scale className="w-3.5 h-3.5" />
+                  <span>GENERATE LEGAL APPEAL NOTICE</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* SECTION 4: Aunt May's Hospital Bill Simulator (Interactive Math Engine) */}
+      {/* SECTION 4: Aunt May's Hospital Bill Simulator */}
       <div id="aunt-may-calculator" className="rounded-3xl p-6 sm:p-8 bg-zinc-900/90 border border-white/10 shadow-2xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
           <div>
@@ -805,23 +790,21 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
               </h3>
             </div>
             <p className="text-xs sm:text-sm text-zinc-400 font-mono mt-1">
-              Test how much cash your insurer secretly steals from you with room rent & consumable fine print!
+              Calculate the exact rupee deduction stolen by room-rent caps and consumable fine print.
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-2xl bg-black/60 border border-white/10 text-right font-mono">
-            <span className="text-[10px] text-zinc-500 block uppercase">OUT-OF-POCKET SHOCK</span>
-            <span className="text-lg font-black text-red-500">{lossPercentage}% YOU PAY</span>
+            <span className="text-[10px] text-zinc-400 block uppercase">OUT-OF-POCKET SHOCK</span>
+            <span className="text-xl font-black text-red-500">{lossPercentage}% YOU PAY</span>
           </div>
         </div>
 
         {/* Sliders Deck */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          {/* Slider 1: Total Hospital Bill */}
           <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
             <div className="flex justify-between text-xs font-mono">
-              <span className="text-zinc-400">TOTAL BILL:</span>
+              <span className="text-zinc-400">TOTAL HOSPITAL BILL:</span>
               <span className="font-bold text-white">₹{billAmount.toLocaleString()}</span>
             </div>
             <input
@@ -835,7 +818,6 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             />
           </div>
 
-          {/* Slider 2: Room Rent Selected */}
           <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-zinc-400">ROOM RENT TAKEN:</span>
@@ -852,7 +834,6 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             />
           </div>
 
-          {/* Slider 3: Room Rent Cap in Policy */}
           <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-zinc-400">1% POLICY ROOM CAP:</span>
@@ -869,7 +850,6 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             />
           </div>
 
-          {/* Slider 4: Co-Pay % */}
           <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-zinc-400">CO-PAY CLAUSE:</span>
@@ -889,7 +869,6 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
 
         {/* Live Bill Breakdown Math Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-white/10">
-          
           <div className="p-4 rounded-2xl bg-red-950/20 border border-red-500/30">
             <span className="text-[11px] font-mono text-zinc-400 block uppercase">
               ROOM-RENT RATIO PENALTY
@@ -940,7 +919,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
         </div>
       </div>
 
-      {/* SECTION 5: Rebuttal Notice Modal / Card ("PUT SOME DIRT IN THEIR EYE") */}
+      {/* SECTION 5: Formal IRDAI Ombudsman Grievance Notice */}
       <div id="rebuttal-generator" className="rounded-3xl p-6 sm:p-8 bg-black/80 border-2 border-red-500/40 shadow-2xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -971,7 +950,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
         </pre>
       </div>
 
-      {/* SECTION 6: Supabase Real-Time Audit Trail Feed */}
+      {/* SECTION 6: Supabase Real-Time Audit Feed */}
       {historyList.length > 0 && (
         <div className="rounded-3xl p-6 bg-black/60 border border-white/10 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">

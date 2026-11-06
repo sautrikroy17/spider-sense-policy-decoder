@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
 
 export const ScrollToTop = () => {
-  const { currentTheme } = useTheme();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setVisible(window.scrollY > 240);
+      setVisible(window.scrollY > 280);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -18,7 +16,7 @@ export const ScrollToTop = () => {
   }, []);
 
   const scrollToTop = () => {
-    sound.playClick();
+    sound.playThwip();
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
@@ -29,23 +27,18 @@ export const ScrollToTop = () => {
     <AnimatePresence>
       {visible && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+          initial={{ opacity: 0, scale: 0.8, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.6, y: 20 }}
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
+          exit={{ opacity: 0, scale: 0.8, y: 15 }}
+          whileHover={{ scale: 1.12 }}
+          whileTap={{ scale: 0.92 }}
           onClick={scrollToTop}
-          title="Back to Top"
-          className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-200 border border-white/20"
-          style={{
-            backgroundColor: currentTheme.primary,
-            boxShadow: `0 6px 25px ${currentTheme.glowColor}`
-          }}
+          title="Scroll To Top"
+          className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-2xl flex items-center justify-center text-white bg-gradient-to-br from-red-600 via-rose-700 to-black border-2 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.7)] transition-transform group"
         >
-          <ArrowUp className="w-5 h-5 stroke-[2.5]" />
+          <ArrowUp className="w-5 h-5 stroke-[2.5] text-white group-hover:-translate-y-0.5 transition-transform" />
         </motion.button>
       )}
     </AnimatePresence>
   );
 };
-

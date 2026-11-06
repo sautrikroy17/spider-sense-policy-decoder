@@ -15,18 +15,16 @@ import {
   Calculator,
   UploadCloud
 } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
 import { useTextScramble } from '../utils/useTextScramble';
 import { SpotlightCard } from './ui/SpotlightCard';
 
 export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
-  const { currentTheme, currentProblem } = useTheme();
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
 
   // Dynamic hacker text scramble
   const scrambledTitle = useTextScramble('POLICY DECODER', 20);
-  const scrambledTheme = useTextScramble('SPIDER-MAN: BRAND NEW DAY', 25);
+  const scrambledTheme = useTextScramble('SPIDER-MAN', 25);
 
   const handleToggleMusic = () => {
     const next = sound.toggleSpiderTheme();
@@ -34,7 +32,7 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
   };
 
   return (
-    <section className="relative pt-24 pb-16 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+    <section className="relative pt-28 pb-16 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
       
       {/* Top Cyber Telemetry Line */}
       <motion.div
@@ -45,17 +43,17 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/30 backdrop-blur-md text-red-400">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
           <span className="font-bold uppercase tracking-wider">
-            SPIDER-SENSE 2.0 // BRAND NEW DAY
+            SPIDER-SENSE // AI POLICY FORENSICS
           </span>
         </span>
 
         <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
           <Radio className="w-3 h-3 text-cyan-400" />
-          <span>LOC: QUEENS & SRM CHENNAI [12.8231°N, 80.0442°E]</span>
+          <span>QUEENS & NEW YORK CONSUMER DEFENSE</span>
         </span>
 
-        <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-amber-300 font-bold">
-          DICE [ 2 & 4 ]
+        <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-emerald-400 font-bold">
+          ⚡ GROQ LPU ACTIVE (~140MS)
         </span>
       </motion.div>
 
@@ -79,10 +77,10 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         transition={{ delay: 0.15 }}
         className="mt-4 text-sm sm:text-base md:text-lg text-zinc-300 max-w-3xl font-mono leading-relaxed"
       >
-        "Defeat the fine-print corporate syndicates. 40% room-rent traps, 48-hour emergency voids, and hidden co-pays stop here. With great policy premiums comes zero ambiguity."
+        "Defeat the fine-print corporate syndicates. 40% room-rent traps, 48-hour emergency voids, and hidden co-pays stop here. With great premiums comes zero ambiguity."
       </motion.p>
 
-      {/* Comic Spidey Quote + Brand New Day Theme Player Pill */}
+      {/* Famous Movie Quote Pill + Audio Player */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -90,39 +88,18 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         className="mt-5 px-5 py-2.5 rounded-full bg-black/60 border border-red-500/30 text-xs text-zinc-300 flex items-center gap-3 backdrop-blur-xl shadow-[0_0_25px_rgba(239,68,68,0.2)]"
       >
         <span className="text-base">🕸️</span>
-        <span className="italic text-zinc-400 font-mono">
-          "Rent? You'll get your rent when you fix this damn room-rent clause!"
+        <span className="italic text-zinc-300 font-mono">
+          "With great power comes great responsibility — and zero hidden fine print."
         </span>
 
-        {/* Music Play/Pause Button */}
+        {/* Music Play/Pause Button (NO BOUNCE) */}
         <button
           onClick={handleToggleMusic}
           className="ml-2 pl-3 border-l border-white/20 flex items-center gap-1.5 text-xs font-bold font-mono text-red-400 hover:text-white transition-colors"
         >
-          {isPlayingMusic ? <Volume2 className="w-3.5 h-3.5 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5" />}
-          <span>{isPlayingMusic ? 'BRAND NEW DAY THEME [PLAYING]' : 'PLAY SPIDEY THEME'}</span>
+          {isPlayingMusic ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          <span>{isPlayingMusic ? 'THEME PLAYING' : 'PLAY SPIDEY THEME'}</span>
         </button>
-
-        {/* Animated Equalizer Bars when music plays */}
-        {isPlayingMusic && (
-          <div className="flex items-center gap-0.5 ml-1">
-            {[14, 26, 18, 30, 16, 24, 20].map((h, i) => (
-              <motion.span
-                key={i}
-                animate={{
-                  height: [6, h, 8, h * 0.7, 6]
-                }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  delay: i * 0.1,
-                  ease: 'easeInOut'
-                }}
-                className="w-1 bg-red-500 rounded-full"
-              />
-            ))}
-          </div>
-        )}
       </motion.div>
 
       {/* Hero CTA Button Group */}
@@ -185,10 +162,10 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
               </span>
               <div>
                 <h3 className="font-bold text-base sm:text-lg text-white tracking-wide font-cyber">
-                  PROBLEM STATEMENT 04 // POLICY DECODER
+                  POLICY DECODER // AUTONOMOUS IRDAI AUDIT ENGINE
                 </h3>
                 <p className="text-xs text-zinc-400 font-mono">
-                  SRMIST HTB Intra-Club Hackathon • Dice [ 2 & 4 ]
+                  Engineered with Groq LPU™ (120B Parameters) & Supabase Real-Time Backend
                 </p>
               </div>
             </div>
@@ -204,11 +181,11 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
           <div className="mt-6 pt-4 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-400 border-t border-white/5 font-mono">
             <span className="flex items-center gap-1.5">
               <Cpu className="w-4 h-4 text-red-400" />
-              HERO: SPIDER-MAN & BULLY MAGUIRE
+              HERO: SPIDER-MAN & CONSUMER DEFENSE
             </span>
             <span className="flex items-center gap-1.5">
               <Activity className="w-4 h-4 text-emerald-400" />
-              BACKEND: SUPABASE REAL-TIME DATABASE
+              GROQ LPU: ~140MS INFERENCE SPEED
             </span>
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-cyan-400" />
@@ -218,13 +195,13 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         </SpotlightCard>
       </div>
 
-      {/* Down Indicator */}
+      {/* Down Indicator (NO BOUNCE) */}
       <button
         onClick={onScrollToApp}
         className="mt-10 text-zinc-500 hover:text-red-400 transition-colors flex flex-col items-center gap-1.5 text-xs font-mono"
       >
         <span>INTERACTIVE POLICY DECODER</span>
-        <ArrowDown className="w-4 h-4 animate-bounce text-red-500" />
+        <ArrowDown className="w-4 h-4 text-red-500" />
       </button>
     </section>
   );

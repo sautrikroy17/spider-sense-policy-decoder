@@ -24,7 +24,7 @@ export const ThemePreloader = ({ onFinish }) => {
           return 100;
         }
 
-        if (next > 75) setStatusText('INJECTING BRAND NEW DAY PROTOCOL...');
+        if (next > 75) setStatusText('INJECTING CONSUMER DEFENSE PROTOCOL...');
         else if (next > 45) setStatusText('CALIBRATING FINE-PRINT RADAR...');
         else if (next > 20) setStatusText('INITIALIZING SPIDER-SENSE 2.0...');
 

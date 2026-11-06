@@ -1,29 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
 
 /**
- * Tactical Combat Spider-Web Reticle Cursor
- * - Exact 1:1 HackTheSinisters tactical reticle architecture
- * - Real Spider-Web crosshair lines & spider emblem core
- * - Dynamic Web Splat burst on click with THWIP sound effect!
- * - Suppressed OS cursor globally
+ * Ultra-Smooth Spider-Sense Cursor with Web Splat Particle Engine
+ * - Smooth inertia trailing ring
+ * - Compact luminous red focal point that doesn't block reading text
+ * - Dynamic web particle splat on click with THWIP sound
  */
 export const CustomCursor = () => {
-  const { currentTheme } = useTheme();
   const dotRef = useRef(null);
-  const outlineRef = useRef(null);
+  const ringRef = useRef(null);
 
   const mouse = useRef({ x: -100, y: -100 });
-  const outlinePos = useRef({ x: -100, y: -100 });
+  const ringPos = useRef({ x: -100, y: -100 });
   const isVisible = useRef(false);
   const rafId = useRef(null);
-
-  // Web Splat effect state
   const [splats, setSplats] = useState([]);
 
   useEffect(() => {
-    // Disable on touch devices
     if (window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) {
       return;
     }
@@ -35,82 +29,33 @@ export const CustomCursor = () => {
       if (!isVisible.current) {
         isVisible.current = true;
         if (dotRef.current) dotRef.current.style.opacity = '1';
-        if (outlineRef.current) outlineRef.current.style.opacity = '1';
-      }
-    };
-
-    const onMouseOver = (e) => {
-      if (
-        e.target.closest(
-          'a, button, input, select, textarea, [role="button"], .clickable, .cursor-pointer, .track-card'
-        )
-      ) {
-        document.body.classList.add('cursor-hover');
-      }
-    };
-
-    const onMouseOut = (e) => {
-      if (
-        e.target.closest(
-          'a, button, input, select, textarea, [role="button"], .clickable, .cursor-pointer, .track-card'
-        )
-      ) {
-        document.body.classList.remove('cursor-hover');
+        if (ringRef.current) ringRef.current.style.opacity = '1';
       }
     };
 
     const onMouseDown = (e) => {
-      document.body.classList.add('cursor-active');
       sound.playThwip();
-
-      // Add a cool web splat particle at click coordinates
       const id = Date.now();
-      setSplats((prev) => [...prev.slice(-4), { id, x: e.clientX, y: e.clientY }]);
+      setSplats((prev) => [...prev.slice(-3), { id, x: e.clientX, y: e.clientY }]);
       setTimeout(() => {
         setSplats((prev) => prev.filter((s) => s.id !== id));
-      }, 600);
-    };
-
-    const onMouseUp = () => {
-      document.body.classList.remove('cursor-active');
-    };
-
-    const onMouseLeave = () => {
-      isVisible.current = false;
-      if (dotRef.current) dotRef.current.style.opacity = '0';
-      if (outlineRef.current) outlineRef.current.style.opacity = '0';
-    };
-
-    const onMouseEnter = () => {
-      isVisible.current = true;
-      if (dotRef.current) dotRef.current.style.opacity = '1';
-      if (outlineRef.current) outlineRef.current.style.opacity = '1';
+      }, 500);
     };
 
     window.addEventListener('mousemove', onMouseMove, { passive: true });
-    document.body.addEventListener('mouseover', onMouseOver, { passive: true });
-    document.body.addEventListener('mouseout', onMouseOut, { passive: true });
     window.addEventListener('mousedown', onMouseDown, { passive: true });
-    window.addEventListener('mouseup', onMouseUp, { passive: true });
-    document.addEventListener('mouseleave', onMouseLeave);
-    document.addEventListener('mouseenter', onMouseEnter);
 
     const animate = () => {
       const { x, y } = mouse.current;
-
-      // Trailing spring for outer HUD outline
-      outlinePos.current.x += (x - outlinePos.current.x) * 0.15;
-      outlinePos.current.y += (y - outlinePos.current.y) * 0.15;
-
-      const ox = outlinePos.current.x;
-      const oy = outlinePos.current.y;
+      ringPos.current.x += (x - ringPos.current.x) * 0.22;
+      ringPos.current.y += (y - ringPos.current.y) * 0.22;
 
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
       }
 
-      if (outlineRef.current) {
-        outlineRef.current.style.transform = `translate3d(${ox}px, ${oy}px, 0) translate(-50%, -50%)`;
+      if (ringRef.current) {
+        ringRef.current.style.transform = `translate3d(${ringPos.current.x}px, ${ringPos.current.y}px, 0) translate(-50%, -50%)`;
       }
 
       rafId.current = requestAnimationFrame(animate);
@@ -120,214 +65,38 @@ export const CustomCursor = () => {
 
     return () => {
       cancelAnimationFrame(rafId.current);
-      document.body.classList.remove('cursor-hover', 'cursor-active');
       window.removeEventListener('mousemove', onMouseMove);
-      document.body.removeEventListener('mouseover', onMouseOver);
-      document.body.removeEventListener('mouseout', onMouseOut);
       window.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
-      document.removeEventListener('mouseleave', onMouseLeave);
-      document.removeEventListener('mouseenter', onMouseEnter);
     };
   }, []);
 
-  const accent = currentTheme.accent || '#ef4444';
-  const glow = currentTheme.glowColor || 'rgba(239, 68, 68, 0.5)';
-
   return (
     <>
-      <style>{`
-        .tactical-cursor-dot {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 32px;
-          height: 32px;
-          z-index: 10000;
-          pointer-events: none;
-          opacity: 0;
-          will-change: transform;
-          transition: opacity 0.2s ease;
-        }
+      <div
+        ref={dotRef}
+        className="fixed top-0 left-0 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_12px_#ef4444] pointer-events-none z-[10000] opacity-0 will-change-transform transition-opacity duration-200"
+      />
+      <div
+        ref={ringRef}
+        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-red-500/50 bg-red-500/10 shadow-[0_0_16px_rgba(239,68,68,0.3)] pointer-events-none z-[9999] opacity-0 will-change-transform transition-opacity duration-200"
+      />
 
-        .tactical-cursor-outline {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 56px;
-          height: 56px;
-          z-index: 9999;
-          pointer-events: none;
-          opacity: 0;
-          will-change: transform;
-          transition: opacity 0.2s ease;
-        }
-
-        .reticle-bracket {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-color: ${accent} !important;
-          filter: drop-shadow(0 0 8px ${accent});
-          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .reticle-b1 { top: 0; left: 0; border-top: 2.5px solid; border-left: 2.5px solid; }
-        .reticle-b2 { top: 0; right: 0; border-top: 2.5px solid; border-right: 2.5px solid; }
-        .reticle-b3 { bottom: 0; left: 0; border-bottom: 2.5px solid; border-left: 2.5px solid; }
-        .reticle-b4 { bottom: 0; right: 0; border-bottom: 2.5px solid; border-right: 2.5px solid; }
-
-        .reticle-core {
-          width: 6px;
-          height: 6px;
-          background-color: ${accent};
-          border-radius: 50%;
-          box-shadow: 0 0 16px ${accent}, 0 0 32px ${glow};
-          transition: all 0.2s ease;
-        }
-
-        .reticle-outline-main {
-          width: 100%;
-          height: 100%;
-          border: 1.5px solid ${accent}66;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          opacity: 0.75;
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .reticle-spike {
-          position: absolute;
-          background-color: ${accent};
-          box-shadow: 0 0 8px ${accent};
-          opacity: 0.8;
-          transition: all 0.3s ease;
-        }
-
-        .rsp-top { top: -8px; left: calc(50% - 1px); width: 2px; height: 8px; }
-        .rsp-right { right: -8px; top: calc(50% - 1px); width: 8px; height: 2px; }
-        .rsp-bottom { bottom: -8px; left: calc(50% - 1px); width: 2px; height: 8px; }
-        .rsp-left { left: -8px; top: calc(50% - 1px); width: 8px; height: 2px; }
-
-        /* Web crosshair diagonals */
-        .web-cross-1 {
-          position: absolute;
-          width: 100%;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, ${accent}55, transparent);
-          transform: rotate(45deg);
-        }
-        .web-cross-2 {
-          position: absolute;
-          width: 100%;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, ${accent}55, transparent);
-          transform: rotate(-45deg);
-        }
-
-        /* Hover States */
-        body.cursor-hover .reticle-bracket {
-          border-color: #ffffff !important;
-          width: 15px;
-          height: 15px;
-          filter: drop-shadow(0 0 16px ${accent});
-        }
-
-        body.cursor-hover .reticle-core {
-          transform: scale(1.9);
-          box-shadow: 0 0 30px ${accent}, 0 0 60px ${glow};
-        }
-
-        body.cursor-hover .reticle-outline-main {
-          transform: scale(1.35);
-          opacity: 1;
-          border-color: ${accent};
-          border-style: dashed;
-          box-shadow: 0 0 25px ${glow};
-        }
-
-        body.cursor-hover .reticle-spike {
-          opacity: 1;
-          box-shadow: 0 0 12px ${accent};
-        }
-
-        body.cursor-hover .rsp-top { transform: translateY(-4px); height: 12px; }
-        body.cursor-hover .rsp-right { transform: translateX(4px); width: 12px; }
-        body.cursor-hover .rsp-bottom { transform: translateY(4px); height: 12px; }
-        body.cursor-hover .rsp-left { transform: translateX(-4px); width: 12px; }
-
-        /* Click / Active State */
-        body.cursor-active .reticle-core {
-          transform: scale(3.5);
-          opacity: 0;
-          transition: all 0.25s ease-out;
-        }
-
-        body.cursor-active .reticle-outline-main {
-          animation: balanced-ripple 0.3s ease-out forwards;
-        }
-
-        body.cursor-active .reticle-bracket {
-          transform: scale(1.6);
-          opacity: 0;
-          transition: all 0.25s ease-out;
-        }
-      `}</style>
-
-      {/* Layer 1: Inner Rotating Scanner Reticle */}
-      <div ref={dotRef} className="tactical-cursor-dot">
-        <div
-          className="relative w-full h-full flex items-center justify-center"
-          style={{ animation: 'rotate-scanner 6s linear infinite' }}
-        >
-          <div className="reticle-bracket reticle-b1" />
-          <div className="reticle-bracket reticle-b2" />
-          <div className="reticle-bracket reticle-b3" />
-          <div className="reticle-bracket reticle-b4" />
-          <div className="reticle-core" />
-        </div>
-      </div>
-
-      {/* Layer 2: Outer Counter-Rotating HUD with Web Crosshairs */}
-      <div ref={outlineRef} className="tactical-cursor-outline">
-        <div
-          className="relative reticle-outline-main"
-          style={{ animation: 'rotate-hud-reverse 10s linear infinite' }}
-        >
-          {/* Faint Internal Web Filaments */}
-          <div className="web-cross-1" />
-          <div className="web-cross-2" />
-
-          {/* Tactical Spikes */}
-          <div className="reticle-spike rsp-top" />
-          <div className="reticle-spike rsp-right" />
-          <div className="reticle-spike rsp-bottom" />
-          <div className="reticle-spike rsp-left" />
-        </div>
-      </div>
-
-      {/* Dynamic Animated Web Splat on Click */}
+      {/* Web Splat Particle Bursts on Click */}
       {splats.map((s) => (
         <div
           key={s.id}
-          className="pointer-events-none fixed z-[10001] animate-ping"
-          style={{
-            top: s.y,
-            left: s.x,
-            transform: 'translate(-50%, -50%)'
-          }}
+          style={{ top: s.y, left: s.x }}
+          className="fixed -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[10001] w-12 h-12 flex items-center justify-center animate-ping"
         >
-          <svg viewBox="0 0 60 60" className="w-14 h-14 text-white opacity-80 filter drop-shadow-[0_0_10px_#ef4444]">
+          <svg viewBox="0 0 40 40" className="w-10 h-10 text-white/90 drop-shadow-[0_0_8px_#ef4444]">
             <path
-              d="M30,30 L10,12 M30,30 L50,12 M30,30 L52,48 M30,30 L8,48 M30,30 L30,5 M30,30 L30,55 M30,30 L5,30 M30,30 L55,30"
-              stroke="white"
-              strokeWidth="1.8"
+              d="M20 2 L20 38 M2 20 L38 20 M7 7 L33 33 M7 33 L33 7"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              fill="none"
               strokeLinecap="round"
             />
-            <circle cx="30" cy="30" r="8" fill="none" stroke="white" strokeWidth="1.5" />
-            <circle cx="30" cy="30" r="16" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3,3" />
+            <circle cx="20" cy="20" r="8" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7" />
           </svg>
         </div>
       ))}

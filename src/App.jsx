@@ -1,31 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
-import { useTheme } from './context/ThemeContext';
 import { CustomCursor } from './components/CustomCursor';
 import { BackgroundFX } from './components/BackgroundFX';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
 import { HangingSpiderman } from './components/HangingSpiderman';
+import { SpideyWallPeeker } from './components/SpideyWallPeeker';
+import { SpideySentinel } from './components/SpideySentinel';
 import { StatsCounter } from './components/StatsCounter';
-import { DiceRollerModal } from './components/DiceRollerModal';
 import { SidebarDrawer } from './components/SidebarDrawer';
 import { ThemePreloader } from './components/ThemePreloader';
 import { ScrollToTop } from './components/ScrollToTop';
 import { BlurFade } from './components/ui/BlurFade';
 import { Footer } from './components/Footer';
-
-// Problem Statements
-import { RecipeRoulette } from './components/problems/RecipeRoulette';
-import { PersonaProbe } from './components/problems/PersonaProbe';
-import { PasswordForge } from './components/problems/PasswordForge';
 import { PolicyDecoder } from './components/problems/PolicyDecoder';
-import { SiteSentinel } from './components/problems/SiteSentinel';
-import { PhishProtocol } from './components/problems/PhishProtocol';
 
 export const App = () => {
-  const { problemId, currentProblem, currentTheme } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [diceModalOpen, setDiceModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
 
@@ -64,52 +55,37 @@ export const App = () => {
     }
   };
 
-  const renderActiveProblem = () => {
-    switch (problemId) {
-      case 1:
-        return <RecipeRoulette />;
-      case 2:
-        return <PersonaProbe />;
-      case 3:
-        return <PasswordForge />;
-      case 4:
-        return <PolicyDecoder />;
-      case 5:
-        return <SiteSentinel />;
-      case 6:
-      default:
-        return <PhishProtocol />;
-    }
-  };
-
   return (
-    <div className={`min-h-screen text-slate-100 relative ${currentTheme.themeClass} overflow-x-hidden`}>
-      {/* First Loading Screen (Access Granted Spider-Man Preloader with authentic logo) */}
+    <div className="min-h-screen text-slate-100 relative bg-[#050508] overflow-x-hidden font-display selection:bg-red-600 selection:text-white">
+      {/* 1. Spider-Man Preloader with authentic logo */}
       {loading && <ThemePreloader onFinish={() => setLoading(false)} />}
 
-      {/* Floating Spider-Man Hanging Upside Down from Top Web Strand! */}
+      {/* 2. THREE 3D INTERACTIVE SPIDER-MAN CHARACTERS */}
+      {/* Spider-Man #1: Top Web Swinger & Leaper (Upside Down) */}
       <HangingSpiderman />
 
-      {/* Floating Scroll To Top Action Button */}
+      {/* Spider-Man #2: Left Edge 3D Wall Crawler & Peeker */}
+      <SpideyWallPeeker />
+
+      {/* Spider-Man #3: Right Corner 3D Sentinel & Jumper */}
+      <SpideySentinel />
+
+      {/* 3. Themed Scroll To Top Action Button (NO bounce) */}
       <ScrollToTop />
 
-      {/* Custom Tactical Reticle Cursor with Web Shoot FX */}
+      {/* 4. Custom Ultra-Smooth Spider-Sense Cursor with Web Splat */}
       <CustomCursor />
 
-      {/* 100% Original Interactive Spider-Web Physics & Manhattan Horizon Background */}
+      {/* 5. Cinematic New York Movie Wallpaper & Spider-Silk Physics Canvas */}
       <BackgroundFX />
 
-      {/* Spider-Sense Themed Floating Pill Navbar */}
-      <Navbar
-        onOpenDiceModal={() => setDiceModalOpen(true)}
-        onOpenSidebar={() => setSidebarOpen(true)}
-      />
+      {/* 6. Production-Grade Cyber Floating Navbar */}
+      <Navbar onOpenSidebar={() => setSidebarOpen(true)} />
 
-      {/* Cyber HUD Sidebar Drawer */}
+      {/* 7. Cyber HUD Quick Controls Drawer */}
       <SidebarDrawer
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onOpenDiceModal={() => setDiceModalOpen(true)}
         onReplayPreloader={() => setLoading(true)}
       />
 
@@ -121,41 +97,33 @@ export const App = () => {
           onScrollToMath={scrollToMath}
         />
 
-        {/* Live Telemetry Bar */}
+        {/* Live Consumer Defense Telemetry Bar */}
         <StatsCounter />
 
-        {/* Interactive Problem Statement Engine (Policy Decoder Workstation) */}
+        {/* Production-Grade Policy Decoder Workstation */}
         <section id="decoder" ref={appSectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 my-16">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
               <h2 className="text-xs sm:text-sm font-mono font-bold tracking-widest uppercase text-white">
-                TACTICAL WORKSPACE // PS 0{currentProblem.id}: {currentProblem.title}
+                LEGAL WORKSPACE // AUTONOMOUS POLICY DECODER
               </h2>
             </div>
-            <button
-              onClick={() => setDiceModalOpen(true)}
-              className="text-xs font-mono text-red-400 hover:text-white transition-colors"
-            >
-              [🎲 Roll / Switch Dice]
-            </button>
+            <div className="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>GROQ LPU ACTIVE (~140MS)</span>
+            </div>
           </div>
 
-          {/* Dynamic Problem Component with Blur-Fade entrance */}
-          <BlurFade key={problemId + currentTheme.name} duration={0.4} blur="8px">
-            {renderActiveProblem()}
+          {/* Dynamic Policy Decoder Component */}
+          <BlurFade duration={0.4} blur="8px">
+            <PolicyDecoder />
           </BlurFade>
         </section>
       </main>
 
-      {/* Dice Console Modal */}
-      <DiceRollerModal
-        isOpen={diceModalOpen}
-        onClose={() => setDiceModalOpen(false)}
-      />
-
-      {/* Footer */}
-      <Footer onOpenDiceModal={() => setDiceModalOpen(true)} />
+      {/* 8. Dedicated Spider-Man Policy Defense Footer */}
+      <Footer />
     </div>
   );
 };
