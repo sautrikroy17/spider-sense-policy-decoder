@@ -129,52 +129,77 @@ export const BackgroundFX = () => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#050508]">
-      {/* Real New York City Spider-Man Movie Backdrop */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25 filter brightness-[0.75] contrast-[1.15]"
+      {/* 🎬 Real 4K Cinematic Spider-Man New York City Movie Backdrop with Smooth Camera Drift */}
+      <motion.div
+        animate={{
+          scale: [1, 1.05, 1],
+          x: [0, -12, 0],
+          y: [0, -8, 0]
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: 'easeInOut'
+        }}
+        className="absolute -inset-8 bg-cover bg-center bg-no-repeat opacity-65 sm:opacity-75 filter brightness-105 contrast-110 saturate-[1.25] will-change-transform"
         style={{
           backgroundImage: `url('/spidey/bg-3.jpeg')`
         }}
       />
 
-      {/* Cinematic Deep Obsidian Vignette & Atmosphere Gradient */}
+      {/* Cinematic Panavision 2.39:1 Letterbox Gradient & Soft Edge Vignette (Keeps Center & Text 100% Readable) */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse at 50% 20%, rgba(10, 8, 20, 0.4) 0%, rgba(5, 5, 8, 0.95) 75%),
-            linear-gradient(180deg, rgba(5, 5, 8, 0.7) 0%, rgba(5, 5, 8, 0.95) 100%)
+            radial-gradient(ellipse at 50% 35%, rgba(5, 5, 8, 0.2) 0%, rgba(5, 5, 8, 0.65) 60%, rgba(5, 5, 8, 0.92) 100%),
+            linear-gradient(180deg, rgba(5, 5, 8, 0.6) 0%, transparent 20%, transparent 75%, rgba(5, 5, 8, 0.95) 100%)
           `
         }}
       />
 
-      {/* Anamorphic Horizontal Lens Flares (Crimson & Cyan) */}
-      <div
-        className="absolute top-1/4 -left-40 w-[600px] h-[2.5px] rotate-[-4deg] opacity-40 blur-[2px]"
+      {/* Cyber Subtle Hex Spider-Grid Overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none" />
+
+      {/* 2.39:1 Anamorphic Lens Flares (Crimson Red & Neon Web Cyan) */}
+      <motion.div
+        animate={{ opacity: [0.35, 0.6, 0.35], scaleX: [0.95, 1.05, 0.95] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-1/4 -left-32 w-[700px] h-[3px] rotate-[-3deg] blur-[2px]"
         style={{
-          background: 'linear-gradient(90deg, transparent, #ef4444, transparent)',
-          boxShadow: '0 0 20px 4px #ef4444'
+          background: 'linear-gradient(90deg, transparent, #ef4444, #f87171, transparent)',
+          boxShadow: '0 0 25px 5px rgba(239, 68, 68, 0.8)'
         }}
       />
-      <div
-        className="absolute top-2/3 -right-40 w-[550px] h-[2.5px] rotate-[6deg] opacity-30 blur-[2px]"
+      <motion.div
+        animate={{ opacity: [0.25, 0.5, 0.25], scaleX: [1.05, 0.95, 1.05] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-3/5 -right-32 w-[650px] h-[3px] rotate-[4deg] blur-[2px]"
         style={{
-          background: 'linear-gradient(90deg, transparent, #0284c7, transparent)',
-          boxShadow: '0 0 20px 4px #0284c7'
+          background: 'linear-gradient(90deg, transparent, #38bdf8, #818cf8, transparent)',
+          boxShadow: '0 0 25px 5px rgba(56, 189, 248, 0.7)'
         }}
       />
 
-      {/* Volumetric Glowing Atmosphere Blobs */}
+      {/* Volumetric Glowing Atmosphere Atmosphere */}
       <motion.div
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.12, 0.22, 0.12]
+          scale: [1, 1.25, 1],
+          opacity: [0.15, 0.28, 0.15]
         }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -top-32 left-1/3 w-[500px] h-[500px] rounded-full blur-[160px] bg-red-600/20"
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-20 left-1/4 w-[600px] h-[600px] rounded-full blur-[160px] bg-red-600/25"
+      />
+      <motion.div
+        animate={{
+          scale: [1.15, 0.95, 1.15],
+          opacity: [0.1, 0.22, 0.1]
+        }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-1/2 -right-20 w-[550px] h-[550px] rounded-full blur-[170px] bg-blue-600/20"
       />
 
-      {/* Interactive Physics Spider-Web Canvas */}
+      {/* Interactive Physics Spider-Silk Canvas with Plucking Strings & Embers */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
     </div>
   );

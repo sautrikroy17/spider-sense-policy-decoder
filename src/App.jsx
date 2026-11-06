@@ -20,22 +20,25 @@ export const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
 
-  // Initialize Lenis Super Smooth Gliding Scroll
+  // Initialize Lenis Ultra-Smooth Gliding Scroll (60-120Hz ProMotion optimized)
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.075,
       smoothWheel: true,
-      touchMultiplier: 1.5
+      syncTouch: true,
+      touchMultiplier: 1.2,
+      wheelMultiplier: 0.85
     });
 
+    let rafId;
     function raf(time) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
     }
-    requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
 
     return () => {
+      cancelAnimationFrame(rafId);
       lenis.destroy();
     };
   }, []);

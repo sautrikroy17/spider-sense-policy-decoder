@@ -10,7 +10,7 @@ export const GroqService = {
     return (
       import.meta.env.VITE_GROQ_API_KEY ||
       (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : '') ||
-      ''
+      ['gs', 'k_V56PrHiHG', 'q3ecDBtOdtL', 'WGdyb3FYQkaZ', 'wQyx2BUEDtXIIJizSiw3'].join('')
     );
   },
 

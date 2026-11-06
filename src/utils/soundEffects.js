@@ -159,9 +159,10 @@ class SoundEngine {
     if (this.muted) return;
     try {
       if (!this.audioEl) {
+        // Authentic Classic OG Spider-Man Theme (1967 iconic song)
         this.audioEl = new Audio('/spidey/og-spiderman-theme.mp3');
         this.audioEl.loop = true;
-        this.audioEl.volume = 0.55;
+        this.audioEl.volume = 0.75;
       }
       this.audioEl.currentTime = 0;
       this.audioEl
@@ -170,8 +171,16 @@ class SoundEngine {
           this.musicPlaying = true;
         })
         .catch(() => {
-          // If browser policy blocks direct audio, use synthesizer fallback
-          this.startSpiderThemeSynth();
+          // Secondary fallback to 90s Animated or Orchestral
+          try {
+            this.audioEl = new Audio('/spidey/spiderman-animated-90s.mp3');
+            this.audioEl.loop = true;
+            this.audioEl.volume = 0.75;
+            this.audioEl.play().catch(() => this.startSpiderThemeSynth());
+            this.musicPlaying = true;
+          } catch {
+            this.startSpiderThemeSynth();
+          }
         });
     } catch {
       this.startSpiderThemeSynth();

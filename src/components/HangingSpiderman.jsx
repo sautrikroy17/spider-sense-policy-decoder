@@ -69,11 +69,11 @@ export const HangingSpiderman = () => {
         onClick={handleClick}
         className="relative cursor-pointer origin-top -mt-2 group"
       >
-        {/* 100% Transparent Spider-Man Hanging Upside Down (Cache-Busted) */}
+        {/* 100% Clean Isolated Transparent Spider-Man Hanging Upside Down */}
         <img
-          src="/spidey/spiderman-hanging-web.png?v=3"
+          src="/spidey/spidey-hanging-perfect.png?v=12"
           alt="Spider-Man Hanging"
-          className="w-24 sm:w-32 md:w-36 h-auto drop-shadow-[0_12px_24px_rgba(239,68,68,0.7)] pointer-events-none"
+          className="w-24 sm:w-32 md:w-36 h-auto drop-shadow-[0_12px_28px_rgba(239,68,68,0.8)] pointer-events-none select-none will-change-transform"
         />
 
         {/* Comic Speech Bubble */}

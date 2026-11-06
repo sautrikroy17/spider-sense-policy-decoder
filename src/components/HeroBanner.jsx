@@ -195,13 +195,22 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         </SpotlightCard>
       </div>
 
-      {/* Down Indicator (NO BOUNCE) */}
+      {/* Spider-Man Themed Down Indicator (Zero Bounce, Pure Glide) */}
       <button
-        onClick={onScrollToApp}
-        className="mt-10 text-zinc-500 hover:text-red-400 transition-colors flex flex-col items-center gap-1.5 text-xs font-mono"
+        onClick={() => {
+          sound.playThwip();
+          onScrollToApp();
+        }}
+        className="mt-10 text-zinc-400 hover:text-white transition-colors flex flex-col items-center gap-2 text-xs font-mono group"
       >
-        <span>INTERACTIVE POLICY DECODER</span>
-        <ArrowDown className="w-4 h-4 text-red-500" />
+        <span className="tracking-widest uppercase text-[11px] group-hover:text-red-400 transition-colors">
+          EXPLORE POLICY DECODER
+        </span>
+        <div className="w-8 h-8 rounded-full border border-red-500/40 bg-red-600/10 flex items-center justify-center group-hover:border-red-500 group-hover:bg-red-600/25 transition-all shadow-[0_0_12px_rgba(239,68,68,0.3)]">
+          <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-red-500 group-hover:text-white transition-colors">
+            <path d="M12 5v14M19 12l-7 7-7-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
       </button>
     </section>
   );

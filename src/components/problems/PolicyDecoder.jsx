@@ -227,10 +227,12 @@ export const PolicyDecoder = () => {
         colors: ['#ef4444', '#38bdf8', '#22c55e', '#ffffff']
       });
 
-      // Smooth scroll to results
+      // Instant smooth focus on results dossier
       setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+        if (resultsRef.current) {
+          resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
 
       // Record to Supabase
       await PolicyService.recordAudit(newAudit);
@@ -749,12 +751,14 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
                 </span>
               </div>
 
-              <p className="mt-5 text-sm sm:text-base text-zinc-100 font-medium leading-relaxed font-sans">
-                {tone === 'peter' && selectedPolicy.peterParker}
-                {tone === 'bully' && selectedPolicy.bullyMaguire}
-                {tone === 'jjj' && selectedPolicy.jjJameson}
-                {tone === 'lawyer' && selectedPolicy.lawyer}
-              </p>
+              <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10">
+                <p className="text-base sm:text-lg text-white font-medium leading-relaxed font-sans selection:bg-red-600">
+                  {tone === 'peter' && selectedPolicy.peterParker}
+                  {tone === 'bully' && selectedPolicy.bullyMaguire}
+                  {tone === 'jjj' && selectedPolicy.jjJameson}
+                  {tone === 'lawyer' && selectedPolicy.lawyer}
+                </p>
+              </div>
 
               <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
                 <span className="text-xs font-mono text-zinc-400">

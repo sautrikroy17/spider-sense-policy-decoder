@@ -29,36 +29,38 @@ export const SpideySentinel = () => {
   return (
     <div
       style={{ perspective: 1000 }}
-      className="fixed right-0 bottom-24 z-25 pointer-events-auto select-none hidden md:block"
+      className="fixed right-2 sm:right-6 bottom-20 sm:bottom-24 z-25 pointer-events-auto select-none block"
     >
       <motion.div
         animate={
           isLeaping
             ? {
-                x: [-10, -60, 0],
-                y: [0, -70, 0],
-                rotateZ: [0, -18, 0],
-                rotateY: [0, -35, 0],
-                scale: [1, 1.25, 1]
+                x: [-10, -80, -20, 0],
+                y: [0, -130, -30, 0],
+                rotateZ: [0, -24, 12, 0],
+                rotateY: [0, -60, 30, 0],
+                scale: [1, 1.4, 0.95, 1]
               }
             : {
-                y: [0, 6, 0]
+                y: [0, 8, 0],
+                rotateZ: [-2, 2, -2]
               }
         }
         transition={{
-          duration: isLeaping ? 1.2 : 3.5,
+          duration: isLeaping ? 1.4 : 3.8,
           repeat: isLeaping ? 0 : Infinity,
           ease: 'easeInOut'
         }}
-        whileHover={{ x: -15, scale: 1.05 }}
+        whileHover={{ x: -15, scale: 1.1, rotateY: -15 }}
+        whileTap={{ scale: 0.92 }}
         onClick={handleClick}
         className="relative cursor-pointer group"
       >
-        {/* Transparent Spider-Man Leaping Graphic */}
+        {/* Clean Transparent Spider-Man Leaping Sentinel */}
         <img
-          src="/spidey/spiderman-jump-web.png"
+          src="/spidey/spidey-jump-perfect.png?v=12"
           alt="Spider-Man Sentinel"
-          className="w-28 sm:w-36 md:w-44 h-auto drop-shadow-[0_12px_32px_rgba(239,68,68,0.65)] filter brightness-110"
+          className="w-28 sm:w-36 md:w-48 h-auto drop-shadow-[0_16px_36px_rgba(239,68,68,0.75)] filter brightness-110 pointer-events-none select-none will-change-transform"
         />
 
         {/* Tip Bubble */}
@@ -83,3 +85,4 @@ export const SpideySentinel = () => {
     </div>
   );
 };
+

@@ -49,20 +49,21 @@ export const SpideyWallPeeker = () => {
     >
       <motion.div
         animate={{
-          x: isPeeking ? -10 : -75,
+          x: isPeeking ? 10 : -35,
           rotateY: tilt.rotateY,
           rotateX: tilt.rotateX,
-          scale: isPeeking ? 1.05 : 0.95
+          scale: isPeeking ? 1.08 : 0.98
         }}
-        transition={{ type: 'spring', damping: 20, stiffness: 180 }}
+        transition={{ type: 'spring', damping: 18, stiffness: 190 }}
+        whileHover={{ x: 15, scale: 1.12 }}
         onClick={handleClick}
         className="relative cursor-pointer group"
       >
-        {/* Transparent Spider-Man Wall Crawler Image */}
+        {/* Clean Transparent Spider-Man Wall Crawler */}
         <img
-          src="/spidey/spiderman-crouch-web.png"
+          src="/spidey/spidey-crouch-perfect.png?v=12"
           alt="Spider-Man Peeking"
-          className="w-36 sm:w-48 md:w-56 h-auto drop-shadow-[0_10px_30px_rgba(239,68,68,0.6)] filter brightness-110"
+          className="w-36 sm:w-48 md:w-56 h-auto drop-shadow-[0_12px_36px_rgba(239,68,68,0.75)] filter brightness-110 pointer-events-none select-none will-change-transform"
         />
 
         {/* Web Shooting Line Animation */}
@@ -89,3 +90,4 @@ export const SpideyWallPeeker = () => {
     </div>
   );
 };
+
