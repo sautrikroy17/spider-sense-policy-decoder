@@ -17,7 +17,7 @@ import { PolicyDecoder } from './components/problems/PolicyDecoder';
 import { GwenClockTowerScroll } from './components/GwenClockTowerScroll';
 
 export const App = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
 
