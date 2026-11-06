@@ -1,16 +1,22 @@
-import React, { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 /**
  * Cinematic Spider-Man New York Movie Background Engine
  * - Layer 1: Authentic Manhattan Night / Spider-Man movie photography with anamorphic grading & film vignette
- * - Layer 2: Interactive Spider-Silk Physics Canvas where webs pluck & react to mouse movement
- * - Layer 3: Anamorphic Crimson & Cyan Lens Flares + Floating Embers
+ * - Layer 2: 3D Antique Clock Tower Brass Gears that rotate with scroll & mouse parallax (TASM2 homage)
+ * - Layer 3: Interactive Spider-Silk Physics Canvas where webs pluck & react to mouse movement
+ * - Layer 4: Anamorphic Crimson & Cyan Lens Flares + Floating Embers
  */
 export const BackgroundFX = () => {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const [parallax, setParallax] = useState({ x: 0, y: 0, rotateY: 0, rotateX: 0 });
+
+  const { scrollYProgress } = useScroll();
+  const gearRotate1 = useTransform(scrollYProgress, [0, 1], [0, 720]);
+  const gearRotate2 = useTransform(scrollYProgress, [0, 1], [0, -540]);
+  const gearRotate3 = useTransform(scrollYProgress, [0, 1], [0, 360]);
 
   useEffect(() => {
     const onWindowMove = (e) => {
@@ -182,6 +188,94 @@ export const BackgroundFX = () => {
 
       {/* Cyber Subtle Hex Spider-Grid Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none" />
+
+      {/* ⚙️ 3D Cinematic Clock Tower Brass Gears (The Amazing Spider-Man 2 Homage) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden [perspective:1000px]">
+        {/* Giant Left Clock Tower Gear */}
+        <motion.div
+          style={{ rotate: gearRotate1 }}
+          className="absolute -top-32 -left-32 w-[480px] h-[480px] opacity-25 filter drop-shadow-[0_0_35px_rgba(245,158,11,0.25)] text-amber-500/60"
+        >
+          <svg viewBox="0 0 200 200" className="w-full h-full fill-none stroke-current" strokeWidth="1.5">
+            <circle cx="100" cy="100" r="90" strokeDasharray="6,4" />
+            <circle cx="100" cy="100" r="76" strokeWidth="2" />
+            <circle cx="100" cy="100" r="30" strokeWidth="2.5" />
+            <circle cx="100" cy="100" r="10" fill="currentColor" opacity="0.4" />
+            {/* Gear Spokes */}
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+              <line
+                key={deg}
+                x1="100"
+                y1="100"
+                x2={100 + 75 * Math.cos((deg * Math.PI) / 180)}
+                y2={100 + 75 * Math.sin((deg * Math.PI) / 180)}
+                strokeWidth="1.8"
+              />
+            ))}
+            {/* Cog Teeth */}
+            {[0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345].map((deg) => (
+              <rect
+                key={deg}
+                x="96"
+                y="5"
+                width="8"
+                height="10"
+                fill="currentColor"
+                opacity="0.6"
+                transform={`rotate(${deg} 100 100)`}
+              />
+            ))}
+          </svg>
+        </motion.div>
+
+        {/* Medium Right Clock Gear (Counter-Rotating) */}
+        <motion.div
+          style={{ rotate: gearRotate2 }}
+          className="absolute top-1/3 -right-24 w-[420px] h-[420px] opacity-20 filter drop-shadow-[0_0_30px_rgba(239,68,68,0.25)] text-red-500/60"
+        >
+          <svg viewBox="0 0 200 200" className="w-full h-full fill-none stroke-current" strokeWidth="1.5">
+            <circle cx="100" cy="100" r="85" strokeWidth="2" />
+            <circle cx="100" cy="100" r="45" strokeDasharray="4,4" />
+            <circle cx="100" cy="100" r="14" fill="currentColor" opacity="0.3" />
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+              <line
+                key={deg}
+                x1="100"
+                y1="100"
+                x2={100 + 85 * Math.cos((deg * Math.PI) / 180)}
+                y2={100 + 85 * Math.sin((deg * Math.PI) / 180)}
+                strokeWidth="2.2"
+              />
+            ))}
+            {[...Array(16)].map((_, i) => (
+              <rect
+                key={i}
+                x="95"
+                y="8"
+                width="10"
+                height="10"
+                fill="currentColor"
+                opacity="0.5"
+                transform={`rotate(${i * 22.5} 100 100)`}
+              />
+            ))}
+          </svg>
+        </motion.div>
+
+        {/* Central Faint Dial frozen near 1:21 (Iconic TASM2 detail) */}
+        <motion.div
+          style={{ rotate: gearRotate3 }}
+          className="absolute bottom-12 left-1/3 w-[340px] h-[340px] opacity-15 text-zinc-400"
+        >
+          <svg viewBox="0 0 200 200" className="w-full h-full fill-none stroke-current" strokeWidth="1">
+            <circle cx="100" cy="100" r="90" strokeDasharray="2,6" />
+            {/* Clock Hand at 1:21 */}
+            <line x1="100" y1="100" x2="135" y2="45" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="100" y1="100" x2="160" y2="125" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="100" cy="100" r="4" fill="#ef4444" />
+          </svg>
+        </motion.div>
+      </div>
 
       {/* 2.39:1 Anamorphic Lens Flares (Crimson Red & Neon Web Cyan) */}
       <motion.div

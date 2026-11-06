@@ -14,6 +14,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { BlurFade } from './components/ui/BlurFade';
 import { Footer } from './components/Footer';
 import { PolicyDecoder } from './components/problems/PolicyDecoder';
+import { GwenClockTowerScroll } from './components/GwenClockTowerScroll';
 
 export const App = () => {
   const [loading, setLoading] = useState(true);
@@ -72,6 +73,9 @@ export const App = () => {
 
       {/* Spider-Man #3: Right Edge 3D Interactive Spider-Man vs Venom Combat Battle */}
       <SpideyVsVenomCombat />
+
+      {/* 🎬 Andrew Garfield & Gwen Stacy: Clock Tower Freefall Scroll Storyline */}
+      <GwenClockTowerScroll />
 
       {/* 3. Themed Scroll To Top Action Button (NO bounce) */}
       <ScrollToTop />

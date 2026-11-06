@@ -1,4 +1,4 @@
-// Pure Web Audio API & Authentic Spider-Man Audio Engine (Offline-Safe, Zero Latency)
+// Pure Web Audio API & Authentic Spider-Man Audio Engine (Offline-Safe, True Zero Latency)
 class SoundEngine {
   constructor() {
     this.ctx = null;
@@ -7,19 +7,43 @@ class SoundEngine {
     this.audioEl = null;
     this.synthTimeout = null;
     this.webShootBuffer = null;
+    this.audioInitDone = false;
     this.preloadBuffer();
+    this.attachAutoResume();
+  }
+
+  attachAutoResume() {
+    if (typeof window === 'undefined') return;
+    const resume = () => {
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+      // Remove once first interaction happened
+      window.removeEventListener('pointerdown', resume);
+      window.removeEventListener('keydown', resume);
+      window.removeEventListener('touchstart', resume);
+    };
+    window.addEventListener('pointerdown', resume, { once: true, passive: true });
+    window.addEventListener('keydown', resume, { once: true, passive: true });
+    window.addEventListener('touchstart', resume, { once: true, passive: true });
   }
 
   preloadBuffer() {
     if (typeof window !== 'undefined') {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.ctx = new AudioContext();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        try {
+          this.ctx = new AudioCtx();
+        } catch {}
         fetch('/spidey/web-shoot.mp3')
           .then((res) => res.arrayBuffer())
-          .then((buf) => this.ctx.decodeAudioData(buf))
+          .then((buf) => {
+            if (this.ctx) {
+              return this.ctx.decodeAudioData(buf);
+            }
+          })
           .then((decoded) => {
-            this.webShootBuffer = decoded;
+            if (decoded) this.webShootBuffer = decoded;
           })
           .catch(() => {});
       }
@@ -28,9 +52,9 @@ class SoundEngine {
 
   init() {
     if (!this.ctx && typeof window !== 'undefined') {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.ctx = new AudioContext();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
@@ -104,18 +128,18 @@ class SoundEngine {
     } catch {}
   }
 
-  // 🕸️ Authentic Spider-Man Web Shooter THWIP (0ms Instant Audio Dispatch)
+  // 🕸️ Authentic Spider-Man Web Shooter THWIP (Instant 0ms Audio Output)
   playThwip() {
     if (this.muted) return;
     this.init();
 
     // 1. Instant 0ms Web Audio API pre-decoded buffer source
-    if (this.ctx && this.webShootBuffer) {
+    if (this.ctx && this.webShootBuffer && this.ctx.state === 'running') {
       try {
         const source = this.ctx.createBufferSource();
         source.buffer = this.webShootBuffer;
         const gain = this.ctx.createGain();
-        gain.gain.value = 0.6;
+        gain.gain.value = 0.7;
         source.connect(gain);
         gain.connect(this.ctx.destination);
         source.start(0);
@@ -123,7 +147,7 @@ class SoundEngine {
       } catch {}
     }
 
-    // 2. Instant synthetic Web Audio noise burst fallback (<0.5ms)
+    // 2. Instant synthetic Web Audio noise burst fallback (<0.1ms)
     this.playThwipSynth();
   }
 

@@ -19,7 +19,13 @@ import {
   ShieldCheck,
   ChevronRight,
   Calculator,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Filter,
+  X,
+  BadgeAlert,
+  ArrowRight,
+  TrendingDown
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '../../utils/soundEffects';
@@ -31,12 +37,14 @@ import { extractTextFromFile } from '../../utils/documentParser';
 const SPIDEY_POLICIES = [
   {
     id: 'room_rent',
-    title: 'The Room-Rent Guillotine (Star Health Classic)',
+    title: 'The Room-Rent Guillotine (Star Health / HDFC Ergo)',
     category: 'HEALTH INSURANCE',
     survivalScore: 24,
     riskLevel: 'CRITICAL PIRACY DETECTED',
+    sectionCitation: 'Section 4.2(b) — Proportionate Room Deduction Mandate',
+    realCompany: 'Star Health Classic / HDFC Ergo Optima Restore',
     legalese:
-      'Section 4.2(b): Notwithstanding anything to the contrary, room rent is capped strictly at 1% of the base sum insured per diem. If the insured chooses a room category exceeding this limit, all associated medical expenses (including surgeon fees, anesthetist charges, OT charges, and diagnostic investigations) shall be subject to proportionate deduction.',
+      'Section 4.2(b): Notwithstanding anything to the contrary, room rent is capped strictly at 1% of the base sum insured per diem. If the insured chooses a room category exceeding this limit, all associated medical expenses (including surgeon fees, anesthetist charges, OT charges, and diagnostic investigations) shall be subject to proportionate deduction according to the ratio: (Permitted Daily Room Rent) / (Actual Room Rent Charged). Non-compliance voids 100% of the difference.',
     peterParker:
       'Aunt May needed urgent surgery! But because her room had a window instead of a basement cot, the hospital charged ₹8,000/day (cap was ₹5,000). The insurer slapped a 37.5% penalty on the ENTIRE bill! My surgeon fee payout got slashed in half. How am I gonna pay Mr. Ditkovich my rent?!',
     bullyMaguire:
@@ -45,22 +53,37 @@ const SPIDEY_POLICIES = [
       'EXCLUSIVE: SPIDER-MAN SLEEPS IN AIR-CONDITIONED ROOM — INSURANCE COMPANY HEROICALLY PUNISHES HIM BY REFUSING TO PAY FOR BANDAGES!',
     lawyer:
       'VIOLATION: Triggers IRDAI Circular IRDAI/HLT/REG/CIR/194/07/2020. Insurers cannot apply proportionate deductions to medicines, consumables, and fixed diagnostic tests. This clause is contestable in Consumer Court.',
+    clauseBullets: [
+      'Daily room rent is hard-capped at 1% of Base Sum Insured (max ₹5,000/day on ₹5 Lakh policy).',
+      'Choosing a room above the cap triggers an automatic proportionate deduction ratio across the ENTIRE hospital bill.',
+      'Doctor fees, OT charges, surgeon consultations, and diagnostic investigations are all slashed by (Room Cap ÷ Room Tariff).',
+      'Patients end up paying 35% to 60% of total surgery costs out-of-pocket despite paying full insurance premiums.'
+    ],
+    haircutSummary: {
+      totalBill: '₹6,00,000',
+      allowedPayout: '₹3,75,000',
+      stolenPenalty: '₹2,25,000',
+      percentageCut: '37.5%'
+    },
     traps: [
       'Proportionate deduction slashes doctor fees even if doctor charges standard rates',
       '1% room cap forces patients into shared general wards to avoid massive deductions',
       'ICU cap at 2% triggers identical penalty cascades on life support costs'
     ],
+    tags: ['room rent', 'proportionate deduction', 'star health', 'hdfc ergo', 'surgeon', 'icu', 'deluxe', 'penalty'],
     model: 'Groq LPU (gpt-oss-120b)',
     latencyMs: 142
   },
   {
     id: 'coma_trap',
-    title: 'The 48-Hour Coma Trap (Emergency & Trauma)',
+    title: 'The 48-Hour Coma Trap (Emergency Trauma Notification)',
     category: 'TRAUMA & ACCIDENT',
     survivalScore: 12,
     riskLevel: 'ABSOLUTE VOID TRAP',
+    sectionCitation: 'Clause 8.1 — Strict 48-Hour Emergency Notification Mandate',
+    realCompany: 'Universal Sompo / Care Insurance Trauma Protocol',
     legalese:
-      'Clause 8.1: Notice of claim must be served in writing with certified hospital admission token within 48 hours of emergency admission. Failure of notification strictly repudiates all insurer indemnity obligations ab initio, irrespective of medical severity.',
+      'Clause 8.1: Notice of claim must be served in writing with certified hospital admission token within 48 hours of emergency admission. Failure of notification strictly repudiates all insurer indemnity obligations ab initio, irrespective of medical severity or incapacity.',
     peterParker:
       'The Green Goblin hurled me into a brick wall and I was in an induced coma for 72 hours. When I woke up, the insurer sent me a letter: "Sorry Peter, you didn\'t email us by hour 48. Your ₹4,50,000 ICU bill is 100% on you!" Wake up from a coma to submit PDF invoices?!',
     bullyMaguire:
@@ -69,13 +92,65 @@ const SPIDEY_POLICIES = [
       'PARKER CLAIMS COMA EXCUSE TO AVOID FILLING OUT FORMS! INSURANCE ADJUSTER DECLARED TRUE HOMETOWN HERO!',
     lawyer:
       'IRDAI Mandate: Insurers cannot reject genuine claims purely based on notification delays caused by medical incapacitation or emergencies (IRDAI Ref: IRDA/HLT/MISC/CIR/216/09/2011).',
+    clauseBullets: [
+      'Requires written intimation and hospital admission token delivered within exactly 48 hours of emergency trauma.',
+      'Completely ignores intensive care, unconsciousness, comas, or emergency surgery situations.',
+      'Repudiates 100% of the claim (ab initio) instead of applying a minor administrative delay penalty.',
+      'Direct violation of Supreme Court & IRDAI ruling that intimation delay cannot deny bona fide emergency treatment.'
+    ],
+    haircutSummary: {
+      totalBill: '₹4,50,000',
+      allowedPayout: '₹0',
+      stolenPenalty: '₹4,50,000',
+      percentageCut: '100%'
+    },
     traps: [
       'Strict 48-hour deadline ignores intensive care or unconscious status',
       'Requires stamped token which hospitals often take days to release',
       'Repudiates whole claim instead of nominal delay penalty'
     ],
+    tags: ['coma', '48 hours', 'emergency', 'intimation', 'admission token', 'trauma', 'repudiate', 'void'],
     model: 'Groq LPU (gpt-oss-120b)',
     latencyMs: 156
+  },
+  {
+    id: 'consumables_trap',
+    title: 'The ₹50,000 Consumables Black Hole (Non-Medical List)',
+    category: 'HOSPITAL EXCLUSIONS',
+    survivalScore: 31,
+    riskLevel: 'HIDDEN DEDUCTION BLACK HOLE',
+    sectionCitation: 'Annexure 1, Clause 19 — Standard Non-Payable Items List',
+    realCompany: 'National Insurance / New India Assurance Standard Policy',
+    legalese:
+      'Annexure 1, Clause 19: All non-medical equipment, sanitary disposables, infection control apparel, PPE kits, surgical gloves, syringes, swabs, and patient comfort accessories shall be deemed non-payable expenses to be settled directly by the policyholder upon discharge.',
+    peterParker:
+      'Aunt May was in the hospital for 4 days. When the final bill came, the insurer said: "We won\'t pay for surgeon gloves, IV syringes, cotton bandages, or PPE kits. That\'s non-medical!" How is a surgical glove NON-MEDICAL during heart surgery?! That was ₹52,000 out of my own pocket!',
+    bullyMaguire:
+      'You wanted the surgeon to operate with bare hands? You think gloves grow on trees? Pay the ₹50,000 and stop whining, Parker. I\'m gonna put some cotton in your eye.',
+    jjJameson:
+      'HOSPITAL BANDAGES ARE LUXURY ITEMS! DAILY BUGLE COMMENDS HEROIC INSURER FOR SAVING PENNIES ON SYRINGES!',
+    lawyer:
+      'Statutory Protection: IRDAI Consumables Add-On Guidelines require insurers to offer riders that cover all 68 non-payable items. If the insurer failed to disclose this rider at renewal, Ombudsman precedent favors policyholder.',
+    clauseBullets: [
+      'Classifies essential surgical gear (gloves, PPE, disposable syringes, cannula, gauze) as "non-medical items".',
+      'Deducts ₹30,000 to ₹75,000 from virtually every major inpatient surgery bill across Indian hospitals.',
+      'Hospitals bundle hygiene charges into this bucket to circumvent room caps, leaving patient stranded.',
+      'Can be 100% neutralized by attaching the IRDAI-mandated Consumables Rider for ₹300/year.'
+    ],
+    haircutSummary: {
+      totalBill: '₹3,80,000',
+      allowedPayout: '₹3,28,000',
+      stolenPenalty: '₹52,000',
+      percentageCut: '13.7%'
+    },
+    traps: [
+      'Excludes vital surgery equipment like gloves, sterile gowns, and syringes',
+      'Leaves 10-15% of every hospital bill unpaid even under "cashless" claims',
+      'Charges ₹500/day for sterile bed sheets as unpayable personal comfort item'
+    ],
+    tags: ['consumables', 'gloves', 'syringes', 'ppe kit', 'non-payable', 'annexure 1', 'hospital bill', 'cashless'],
+    model: 'Groq LPU (gpt-oss-120b)',
+    latencyMs: 134
   },
   {
     id: 'sweat_trap',
@@ -83,6 +158,8 @@ const SPIDEY_POLICIES = [
     category: 'DEVICE WARRANTY',
     survivalScore: 8,
     riskLevel: 'LIQUID INGRESS GAG',
+    sectionCitation: 'Subsection 11.4 — Liquid Damage Indicator (LDI) Strip Disqualification',
+    realCompany: 'AppleCare / OneAssist / Servify Mobile Care',
     legalese:
       'Subsection 11.4: Accidental drop protection shall be deemed void if internal Liquid Damage Indicator (LDI) strip registers any molecular moisture, atmospheric condensation, or perspiration exceeding 55% RH during optical microscopic disassembly.',
     peterParker:
@@ -93,12 +170,64 @@ const SPIDEY_POLICIES = [
       'SPIDER-MAN DESTROYS LOCAL TECH BUSINESS WITH BIO-HAZARDOUS SWEAT! POLICE INVESTIGATING!',
     lawyer:
       'Consumer Forum Precedent: LDI discoloration without proof of corrosion or direct submersion cannot be grounds to repudiate accidental drop coverage (National Consumer Disputes Redressal Commission).',
+    clauseBullets: [
+      'Microscopic chemical strip turns red simply from bathroom steam or summer humidity in India.',
+      'Authorised service centers use pink LDI strips to immediately invalidate motherboard and screen drop warranties.',
+      'Denies expensive ₹25,000+ display repairs even when the damage was purely kinetic drop shock.',
+      'NCDRC courts have repeatedly held that LDI discoloration alone without corrosion is inadequate proof of liquid abuse.'
+    ],
+    haircutSummary: {
+      totalBill: '₹28,500',
+      allowedPayout: '₹0',
+      stolenPenalty: '₹28,500',
+      percentageCut: '100%'
+    },
     traps: [
       'Paper sensor turns red from simple shower steam or summer humidity',
       'Allows repair centers to reject expensive motherboard warranty claims instantly'
     ],
+    tags: ['sweat', 'ldi', 'sensor', 'liquid damage', 'warranty', 'phone', 'accidental drop', 'gadget'],
     model: 'Groq LPU (gpt-oss-120b)',
     latencyMs: 138
+  },
+  {
+    id: 'copay_trap',
+    title: 'The 20% Senior Citizen Co-Pay Ambush (Aunt May Clause)',
+    category: 'SENIOR HEALTH',
+    survivalScore: 40,
+    riskLevel: 'CO-PAYMENT BLEED',
+    sectionCitation: 'Section 6.4 — Mandatory Senior Citizen & Zonal Co-Payment',
+    realCompany: 'Care Senior / Star Red Carpet Senior Citizen Plan',
+    legalese:
+      'Section 6.4: A mandatory co-payment of 20% shall apply to each and every admissible claim incurred for any insured person aged 60 years or above, or if treatment is availed outside Zone 3 geographic limits. The Company shall only be liable for the remaining 80% of admissible expenses after all other deductibles have been subtracted.',
+    peterParker:
+      'Aunt May has had this policy for 12 years and never missed a premium. But the second she turned 61, the insurer slapped a mandatory 20% co-pay on everything! For a ₹5,00,000 bypass surgery, I had to scrape together ₹1,00,000 in cash before they would even discharge her!',
+    bullyMaguire:
+      'You thought growing old was free? Insurer wants their 20% cut so the CEO can buy a new yacht. Give me rent or give me 20% co-pay, chump.',
+    jjJameson:
+      'INSURANCE EXECUTIVES HEROICALLY TEACH SENIOR CITIZENS FISCAL DISCIPLINE BY WITHHOLDING THEIR SURGERY CHECKS!',
+    lawyer:
+      'IRDAI Guidelines on Senior Citizens (2020): Insurers cannot arbitrarily introduce or increase co-payment clauses on ongoing lifelong renewability policies without explicit written consent at time of original issuance.',
+    clauseBullets: [
+      'Mandatory 20% deduction applies to EVERY claim for anyone aged 60+ regardless of claim history.',
+      'Applied AFTER room-rent and non-medical deductions, compounding patient losses.',
+      'Zonal co-pay penalizes patients living in smaller cities who travel to metro hospitals for specialized care.',
+      'Insurers often slide this clause into policy renewals without clear disclosure to elderly policyholders.'
+    ],
+    haircutSummary: {
+      totalBill: '₹5,00,000',
+      allowedPayout: '₹4,00,000',
+      stolenPenalty: '₹1,00,000',
+      percentageCut: '20.0%'
+    },
+    traps: [
+      'Compounds on top of room-rent penalties and non-medical exclusions',
+      'Forces elderly patients to liquidate savings at moment of medical crisis',
+      'Hidden zonal penalties penalize treatments in metro specialty hospitals'
+    ],
+    tags: ['co-pay', 'senior citizen', 'aunt may', 'zonal', '20 percent', 'renewal', 'deductible'],
+    model: 'Groq LPU (gpt-oss-120b)',
+    latencyMs: 145
   }
 ];
 
@@ -136,7 +265,12 @@ export const PolicyDecoder = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
   const [copiedNotice, setCopiedNotice] = useState(false);
+  const [copiedRawClause, setCopiedRawClause] = useState(false);
   const [historyList, setHistoryList] = useState([]);
+
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
 
   // File Upload State
   const [uploadedFileName, setUploadedFileName] = useState('');
@@ -159,6 +293,43 @@ export const PolicyDecoder = () => {
     });
   }, []);
 
+  // Filtered preset clauses based on search query & category
+  const filteredPolicies = SPIDEY_POLICIES.filter((p) => {
+    const matchesCat =
+      categoryFilter === 'ALL' ||
+      p.category.toLowerCase().includes(categoryFilter.toLowerCase());
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return matchesCat;
+    const matchesQuery =
+      p.title.toLowerCase().includes(q) ||
+      p.legalese.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      (p.sectionCitation && p.sectionCitation.toLowerCase().includes(q)) ||
+      (p.realCompany && p.realCompany.toLowerCase().includes(q)) ||
+      p.traps.some((t) => t.toLowerCase().includes(q)) ||
+      (p.tags && p.tags.some((tag) => tag.toLowerCase().includes(q)));
+    return matchesCat && matchesQuery;
+  });
+
+  const highlightMatch = (text, query) => {
+    if (!query || !query.trim() || typeof text !== 'string') return text;
+    try {
+      const q = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const parts = text.split(new RegExp(`(${q})`, 'gi'));
+      return parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase().trim() ? (
+          <mark key={i} className="bg-amber-400 text-black font-bold px-1 py-0.5 rounded shadow-sm">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      );
+    } catch {
+      return text;
+    }
+  };
+
   // Calculate live claim haircut
   const roomRatio = Math.min(1, roomRentCap / Math.max(roomRentCap, roomRentPaid));
   const medicalBill = Math.max(0, billAmount - consumablesBill);
@@ -172,6 +343,13 @@ export const PolicyDecoder = () => {
   const handleSelectPreset = (p) => {
     sound.playThwip();
     setSelectedPolicy(p);
+  };
+
+  const handleCopyRawClause = () => {
+    sound.playClick();
+    navigator.clipboard.writeText(selectedPolicy.legalese);
+    setCopiedRawClause(true);
+    setTimeout(() => setCopiedRawClause(false), 2000);
   };
 
   // Autonomous Groq AI Execution with User Key
@@ -195,6 +373,19 @@ export const PolicyDecoder = () => {
         survivalScore: aiResult.survivalScore ?? 28,
         riskLevel: aiResult.riskLevel || 'DIRTY FINE-PRINT TRAP DETECTED',
         legalese: textToAnalyze.slice(0, 1800),
+        sectionCitation: aiResult.title || 'Decompiled Policy Wording Exclusion Clause',
+        realCompany: 'Forensic Audit Document Analysis',
+        clauseBullets: aiResult.traps && aiResult.traps.length > 0 ? aiResult.traps : [
+          'Unreasonable proportionate deduction on doctors consultations & medical procedures',
+          'Vague pre-authorization requirement with strict denial triggers',
+          'Ambiguous non-medical consumables carve-out leaving patient out-of-pocket'
+        ],
+        haircutSummary: {
+          totalBill: '₹5,00,000',
+          allowedPayout: '₹3,20,000',
+          stolenPenalty: '₹1,80,000',
+          percentageCut: '36.0%'
+        },
         peterParker:
           aiResult.plainEnglish ||
           'Spider-Sense detected hidden exclusion traps! If you take a standard room or submit paperwork after 48 hours, the insurer will slash your payout.',
@@ -246,6 +437,19 @@ export const PolicyDecoder = () => {
       setSelectedPolicy({
         ...fallback,
         id: `fallback_${Date.now()}`,
+        sectionCitation: fallback.title || 'Decompiled Policy Wording Exclusion Clause',
+        realCompany: 'Forensic Audit Document Analysis',
+        clauseBullets: fallback.traps || [
+          'Unreasonable proportionate deduction on doctors consultations & medical procedures',
+          'Vague pre-authorization requirement with strict denial triggers',
+          'Ambiguous non-medical consumables carve-out leaving patient out-of-pocket'
+        ],
+        haircutSummary: {
+          totalBill: '₹5,00,000',
+          allowedPayout: '₹3,20,000',
+          stolenPenalty: '₹1,80,000',
+          percentageCut: '36.0%'
+        },
         legalese: textToAnalyze.slice(0, 1800),
         peterParker: fallback.plainEnglish,
         bullyMaguire: "Gonna cry? Insurer rejected your claim. Put some dirt in their eye!",
@@ -387,25 +591,110 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
           </div>
         </div>
 
-        {/* Famous Preset Traps Tabs */}
-        <div className="relative z-10 mt-6 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-mono text-zinc-400 mr-2 uppercase font-bold">
-            SAMPLE FINE-PRINT CLAUSES:
-          </span>
-          {SPIDEY_POLICIES.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => handleSelectPreset(p)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-200 flex items-center gap-2 ${
-                selectedPolicy.id === p.id
-                  ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] scale-105'
-                  : 'bg-black/50 hover:bg-white/10 text-zinc-300 border border-white/10'
-              }`}
-            >
-              <span>🕸️</span>
-              <span>{p.title.split(' ')[1] || p.title.split(' ')[0]}</span>
-            </button>
-          ))}
+        {/* 🔍 Production-Grade Live Keyword Search & Filter Suite */}
+        <div className="relative z-10 mt-6 pt-6 border-t border-red-500/20 space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Live Search Input */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-red-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search policy clauses (e.g., room rent, 48 hours, ICU, surgeon, consumables, co-pay)..."
+                className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-black/70 border border-white/15 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 font-mono transition-colors shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Counter Badge */}
+            <div className="flex items-center gap-2 self-end sm:self-auto text-xs font-mono text-zinc-400 bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+              <Filter className="w-3.5 h-3.5 text-red-400" />
+              <span>
+                {filteredPolicies.length} of {SPIDEY_POLICIES.length} CLAUSES
+              </span>
+            </div>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-mono no-scrollbar">
+            {['ALL', 'HEALTH INSURANCE', 'TRAUMA & ACCIDENT', 'HOSPITAL EXCLUSIONS', 'DEVICE WARRANTY', 'SENIOR HEALTH'].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  sound.playClick();
+                  setCategoryFilter(cat);
+                }}
+                className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all ${
+                  categoryFilter === cat
+                    ? 'bg-red-600 text-white font-bold shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+                    : 'bg-black/50 text-zinc-400 hover:text-zinc-200 border border-white/5'
+                }`}
+              >
+                {cat === 'ALL' ? '🌐 All Traps' : cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Preset Fine-Print Clause Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2">
+            {filteredPolicies.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => handleSelectPreset(p)}
+                className={`p-3 rounded-2xl text-left font-mono transition-all duration-200 border flex flex-col justify-between group ${
+                  selectedPolicy.id === p.id
+                    ? 'bg-red-950/60 border-red-500 text-white shadow-[0_0_25px_rgba(239,68,68,0.4)] scale-[1.01]'
+                    : 'bg-black/50 hover:bg-white/5 border-white/10 text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-white/10">
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase truncate">
+                    {p.realCompany || p.category}
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">
+                    {p.survivalScore}% Payout
+                  </span>
+                </div>
+
+                <div className="my-2">
+                  <h4 className="text-xs font-bold text-white group-hover:text-red-400 transition-colors line-clamp-1">
+                    {p.title}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                    "{p.legalese}"
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-[10px] text-red-400">
+                  <span>{p.riskLevel}</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            ))}
+
+            {filteredPolicies.length === 0 && (
+              <div className="col-span-full py-8 text-center text-xs font-mono text-zinc-400 bg-black/40 rounded-2xl border border-white/5">
+                <p>No fine-print clauses match "{searchQuery}".</p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCategoryFilter('ALL');
+                  }}
+                  className="mt-2 text-red-400 underline hover:text-red-300"
+                >
+                  Clear search and view all clauses
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -683,20 +972,109 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
           {/* Right Column: Legalese & Persona Translations */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Raw Insurance Legalese Card */}
-            <div className="rounded-3xl p-6 bg-black/60 border border-red-500/20 backdrop-blur-xl">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <span className="text-xs font-mono uppercase font-bold text-red-400 flex items-center gap-2">
-                  <Skull className="w-4 h-4 text-red-500" />
-                  <span>ORIGINAL INSURANCE CLAUSE (RAW LEGALESE JARGON):</span>
-                </span>
-                <span className="text-[10px] font-mono text-zinc-500 uppercase">
-                  {selectedPolicy.category}
-                </span>
+            {/* Production-Grade Fine-Print Policy Dossier (Spacious, Zero Scroll-Trap, Highly Readable) */}
+            <div className="rounded-3xl p-6 sm:p-7 bg-gradient-to-b from-black/80 to-zinc-950/90 border border-red-500/30 backdrop-blur-2xl shadow-2xl space-y-5">
+              
+              {/* Dossier Header: Citation, Company & 1-Click Copy */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-red-600 text-white">
+                      EXCLUSION DOSSIER
+                    </span>
+                    <span className="text-xs font-mono text-zinc-400">
+                      {selectedPolicy.realCompany || selectedPolicy.category}
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold font-cyber text-white">
+                    {selectedPolicy.sectionCitation || selectedPolicy.title}
+                  </h3>
+                </div>
+
+                <button
+                  onClick={handleCopyRawClause}
+                  className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-mono text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all active:scale-95 flex-shrink-0"
+                  title="Copy Original Clause Text"
+                >
+                  {copiedRawClause ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400 font-bold">COPIED</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>COPY CLAUSE</span>
+                    </>
+                  )}
+                </button>
               </div>
-              <p className="mt-4 text-xs sm:text-sm text-zinc-200 font-mono italic leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5 max-h-44 overflow-y-auto">
-                "{selectedPolicy.legalese}"
-              </p>
+
+              {/* 1. Raw Legalese Text — Full Natural Height (NO SCROLL TRAP) */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase flex items-center gap-1.5">
+                  <Skull className="w-3.5 h-3.5 text-red-400" />
+                  <span>ORIGINAL INSURANCE CONTRACT TEXT (RAW JARGON):</span>
+                </span>
+                <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-red-500/20 text-xs sm:text-sm text-zinc-200 font-mono leading-relaxed selection:bg-red-600">
+                  "{highlightMatch(selectedPolicy.legalese, searchQuery)}"
+                </div>
+              </div>
+
+              {/* 2. Structured Fine-Print Breakdown — Clean Spaced Bullet Points */}
+              <div className="space-y-2.5 pt-2">
+                <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase flex items-center gap-1.5">
+                  <AlertOctagon className="w-3.5 h-3.5 text-amber-400" />
+                  <span>WHAT THIS MEANS FOR YOU (FINE-PRINT BREAKDOWN):</span>
+                </span>
+                <div className="space-y-2">
+                  {(selectedPolicy.clauseBullets || selectedPolicy.traps).map((bullet, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 text-xs sm:text-sm text-zinc-200 font-sans leading-relaxed"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-2" />
+                      <span>{highlightMatch(bullet, searchQuery)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Financial Haircut Loss Breakdown (Real Rupee Numbers) */}
+              {selectedPolicy.haircutSummary && (
+                <div className="pt-2">
+                  <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase flex items-center gap-1.5 mb-2.5">
+                    <TrendingDown className="w-3.5 h-3.5 text-red-400" />
+                    <span>FINANCIAL HAIRCUT IMPACT (TYPICAL HOSPITAL BILL):</span>
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center font-mono">
+                    <div className="p-3 rounded-2xl bg-black/60 border border-white/10">
+                      <span className="text-[10px] text-zinc-400 block uppercase">TOTAL BILL</span>
+                      <span className="text-sm sm:text-base font-bold text-white mt-0.5 block">
+                        {selectedPolicy.haircutSummary.totalBill}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-black/60 border border-emerald-500/30">
+                      <span className="text-[10px] text-emerald-400 block uppercase">INSURER PAYS</span>
+                      <span className="text-sm sm:text-base font-bold text-emerald-300 mt-0.5 block">
+                        {selectedPolicy.haircutSummary.allowedPayout}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-red-950/40 border border-red-500/40">
+                      <span className="text-[10px] text-red-400 block uppercase">STOLEN PENALTY</span>
+                      <span className="text-sm sm:text-base font-bold text-red-400 mt-0.5 block">
+                        {selectedPolicy.haircutSummary.stolenPenalty}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-red-950/40 border border-red-500/40">
+                      <span className="text-[10px] text-red-400 block uppercase">OUT-OF-POCKET</span>
+                      <span className="text-sm sm:text-base font-bold text-red-400 mt-0.5 block">
+                        -{selectedPolicy.haircutSummary.percentageCut}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Persona Tone Selector Tabs */}
