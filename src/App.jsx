@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Lenis from 'lenis';
 import { useTheme } from './context/ThemeContext';
 import { CustomCursor } from './components/CustomCursor';
 import { BackgroundFX } from './components/BackgroundFX';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
+import { HangingSpiderman } from './components/HangingSpiderman';
 import { SinisterSixShowcase } from './components/SinisterSixShowcase';
-import { EmblaThemeCarousel } from './components/EmblaThemeCarousel';
 import { StatsCounter } from './components/StatsCounter';
 import { DiceRollerModal } from './components/DiceRollerModal';
 import { SidebarDrawer } from './components/SidebarDrawer';
@@ -29,6 +30,26 @@ export const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
   const sinisterSectionRef = useRef(null);
+
+  // Initialize Lenis Super Smooth Gliding Scroll
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      touchMultiplier: 1.5
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
 
   const scrollToApp = () => {
     if (appSectionRef.current) {
@@ -61,9 +82,12 @@ export const App = () => {
   };
 
   return (
-    <div className={`min-h-screen text-slate-100 relative ${currentTheme.themeClass}`}>
-      {/* First Loading Screen (Access Granted Spider-Man Preloader) */}
+    <div className={`min-h-screen text-slate-100 relative ${currentTheme.themeClass} overflow-x-hidden`}>
+      {/* First Loading Screen (Access Granted Spider-Man Preloader with authentic logo) */}
       {loading && <ThemePreloader onFinish={() => setLoading(false)} />}
+
+      {/* Floating Spider-Man Hanging Upside Down from Top Web Strand! */}
+      <HangingSpiderman />
 
       {/* Floating Scroll To Top Action Button */}
       <ScrollToTop />
@@ -71,10 +95,10 @@ export const App = () => {
       {/* Custom Tactical Reticle Cursor with Web Shoot FX */}
       <CustomCursor />
 
-      {/* Dynamic Background FX (Canvas particles, Spider-Web filaments, Mesh glowing blobs, CRT scanline) */}
+      {/* Real Cinematic Movie Frames Background with Web Filament Connections */}
       <BackgroundFX />
 
-      {/* Header Navigation */}
+      {/* Themed Floating Pill Navbar */}
       <Navbar
         onOpenDiceModal={() => setDiceModalOpen(true)}
         onOpenSidebar={() => setSidebarOpen(true)}
@@ -89,7 +113,7 @@ export const App = () => {
       />
 
       {/* Main Content Area */}
-      <main className="relative z-10">
+      <main id="top" className="relative z-10">
         {/* Cinematic Landing Page Hero */}
         <HeroBanner
           onScrollToApp={scrollToApp}
@@ -100,12 +124,12 @@ export const App = () => {
         <StatsCounter />
 
         {/* The Fine-Print Sinister Six Gallery */}
-        <div ref={sinisterSectionRef}>
+        <div id="sinister" ref={sinisterSectionRef}>
           <SinisterSixShowcase onSelectVillain={scrollToApp} />
         </div>
 
-        {/* Interactive Problem Statement Engine (Policy Decoder) */}
-        <section ref={appSectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 my-16">
+        {/* Interactive Problem Statement Engine (Policy Decoder Workstation) */}
+        <section id="decoder" ref={appSectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 my-16">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
@@ -126,9 +150,6 @@ export const App = () => {
             {renderActiveProblem()}
           </BlurFade>
         </section>
-
-        {/* 3D Embla Theme Showcase Carousel */}
-        <EmblaThemeCarousel />
       </main>
 
       {/* Dice Console Modal */}
