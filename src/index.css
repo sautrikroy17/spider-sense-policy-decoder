@@ -31,6 +31,44 @@
   }
 }
 
+/* ==========================================================================
+   Tactical Cursor System (Matches hackthesinisters.vercel.app EXACTLY)
+   Forces browser to suppress OS cursor everywhere on desktop
+   ========================================================================== */
+@media (pointer: fine) {
+  html,
+  body,
+  *,
+  *::before,
+  *::after,
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  .clickable,
+  .cursor-pointer {
+    cursor: none !important;
+  }
+}
+
+/* Tactical Cursor Animations matching HackTheSinisters */
+@keyframes rotate-scanner {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotate-hud-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes balanced-ripple {
+  0% { transform: scale(1); opacity: 1; border-width: 3px; }
+  100% { transform: scale(2.6); opacity: 0; border-width: 1px; }
+}
+
 /* Scanlines & CRT simulation */
 .crt-overlay {
   background: linear-gradient(
@@ -120,4 +158,5 @@
     transition-delay: 0s !important;
   }
 }
+
 
