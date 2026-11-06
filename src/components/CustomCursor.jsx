@@ -1,184 +1,123 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 export const CustomCursor = () => {
   const { currentTheme } = useTheme();
-  const outerRef = useRef(null);
+  const followerRef = useRef(null);
   const dotRef = useRef(null);
-  const haloRef = useRef(null);
-  const pos = useRef({ x: -300, y: -300 });
-  const outerPos = useRef({ x: -300, y: -300 });
-  const hovered = useRef(false);
-  const clicking = useRef(false);
-  const visible = useRef(false);
-  const raf = useRef(null);
+  const pos = useRef({ x: -100, y: -100 });
+  const followerPos = useRef({ x: -100, y: -100 });
+  const isHovered = useRef(false);
+  const isClicking = useRef(false);
+  const isVisible = useRef(false);
+  const rafId = useRef(null);
 
   useEffect(() => {
-    // Touch devices — skip entirely
+    // Disable on touch screens
     if (window.matchMedia('(pointer: coarse)').matches) return;
 
-    document.documentElement.style.cursor = 'none';
-
-    const show = () => {
-      if (!visible.current) {
-        visible.current = true;
-        outerRef.current && (outerRef.current.style.opacity = '1');
-        dotRef.current && (dotRef.current.style.opacity = '1');
-        haloRef.current && (haloRef.current.style.opacity = '1');
-      }
-    };
-    const hide = () => {
-      visible.current = false;
-      outerRef.current && (outerRef.current.style.opacity = '0');
-      dotRef.current && (dotRef.current.style.opacity = '0');
-      haloRef.current && (haloRef.current.style.opacity = '0');
-    };
-
-    const onMove = (e) => {
+    const onPointerMove = (e) => {
       pos.current = { x: e.clientX, y: e.clientY };
-      show();
-      hovered.current = !!e.target.closest(
-        'button,a,input,select,textarea,[role="button"],label,.cursor-pointer'
-      );
+      if (!isVisible.current) {
+        isVisible.current = true;
+        if (followerRef.current) followerRef.current.style.opacity = '1';
+        if (dotRef.current) dotRef.current.style.opacity = '1';
+      }
+
+      // Check for interactive targets
+      const target = e.target;
+      isHovered.current = !!target.closest('button, a, input, select, textarea, [role="button"], label, .clickable');
     };
-    const onDown = () => { clicking.current = true; };
-    const onUp = () => { clicking.current = false; };
 
-    window.addEventListener('mousemove', onMove, { passive: true });
-    window.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-    document.addEventListener('mouseleave', hide);
-    document.addEventListener('mouseenter', show);
+    const onPointerDown = () => { isClicking.current = true; };
+    const onPointerUp = () => { isClicking.current = false; };
+    const onMouseLeave = () => {
+      isVisible.current = false;
+      if (followerRef.current) followerRef.current.style.opacity = '0';
+      if (dotRef.current) dotRef.current.style.opacity = '0';
+    };
+    const onMouseEnter = () => {
+      isVisible.current = true;
+      if (followerRef.current) followerRef.current.style.opacity = '1';
+      if (dotRef.current) dotRef.current.style.opacity = '1';
+    };
 
-    // Pure RAF lerp — zero Framer-Motion overhead, zero lag
-    const lerp = (a, b, t) => a + (b - a) * t;
-    const LERP_OUTER = 0.14;
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('mouseleave', onMouseLeave);
+    document.addEventListener('mouseenter', onMouseEnter);
 
-    const tick = () => {
+    // 120Hz-ready lerp animation loop
+    const LERP_FACTOR = 0.22; // Snappy, zero sluggishness
+
+    const render = () => {
       const { x, y } = pos.current;
-      const h = hovered.current;
-      const c = clicking.current;
 
-      // Dot = instant snap
+      // Laser dot tracks instantly at screen refresh rate
       if (dotRef.current) {
-        dotRef.current.style.transform =
-          `translate(${x - 4}px,${y - 4}px) scale(${c ? 2 : h ? 0.5 : 1})`;
+        dotRef.current.style.transform = `translate3d(${x - 3}px, ${y - 3}px, 0) scale(${isClicking.current ? 1.6 : 1})`;
       }
 
-      // Outer ring = soft lerp
-      outerPos.current.x = lerp(outerPos.current.x, x, LERP_OUTER);
-      outerPos.current.y = lerp(outerPos.current.y, y, LERP_OUTER);
-      const ox = outerPos.current.x;
-      const oy = outerPos.current.y;
+      // Magnetic reticle ring follows with smooth snappy spring
+      followerPos.current.x += (x - followerPos.current.x) * LERP_FACTOR;
+      followerPos.current.y += (y - followerPos.current.y) * LERP_FACTOR;
 
-      const sz = h ? 48 : 28;
-      if (outerRef.current) {
-        outerRef.current.style.transform =
-          `translate(${ox - sz / 2}px,${oy - sz / 2}px) rotate(${h ? '45deg' : '0deg'}) scale(${c ? 0.7 : 1})`;
-        outerRef.current.style.width = `${sz}px`;
-        outerRef.current.style.height = `${sz}px`;
+      const fx = followerPos.current.x;
+      const fy = followerPos.current.y;
+      const size = isHovered.current ? 40 : 24;
+
+      if (followerRef.current) {
+        followerRef.current.style.transform = `translate3d(${fx - size / 2}px, ${fy - size / 2}px, 0) scale(${isClicking.current ? 0.8 : 1}) rotate(${isHovered.current ? '45deg' : '0deg'})`;
+        followerRef.current.style.width = `${size}px`;
+        followerRef.current.style.height = `${size}px`;
       }
 
-      // Wide ambient halo = very slow lerp
-      if (haloRef.current) {
-        const hx = lerp(outerPos.current.x, x, 0.06);
-        const hy = lerp(outerPos.current.y, y, 0.06);
-        haloRef.current.style.transform = `translate(${ox - 32}px,${oy - 32}px)`;
-        haloRef.current.style.opacity = visible.current ? (h ? '0.5' : '0.18') : '0';
-      }
-
-      raf.current = requestAnimationFrame(tick);
+      rafId.current = requestAnimationFrame(render);
     };
-    raf.current = requestAnimationFrame(tick);
+
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
-      cancelAnimationFrame(raf.current);
-      document.documentElement.style.cursor = '';
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('mouseup', onUp);
-      document.removeEventListener('mouseleave', hide);
-      document.removeEventListener('mouseenter', show);
+      cancelAnimationFrame(rafId.current);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('mouseleave', onMouseLeave);
+      document.removeEventListener('mouseenter', onMouseEnter);
     };
   }, []);
 
-  // Update colors when theme changes (direct DOM write, no re-render)
-  useEffect(() => {
-    const { accent, primary, glowColor } = currentTheme;
-    if (dotRef.current) {
-      dotRef.current.style.backgroundColor = primary;
-      dotRef.current.style.boxShadow = `0 0 12px 4px ${primary}`;
-    }
-    if (outerRef.current) {
-      outerRef.current.style.borderColor = accent;
-      outerRef.current.style.boxShadow = `0 0 16px ${glowColor}`;
-      outerRef.current.querySelectorAll('i').forEach(s => {
-        s.style.backgroundColor = accent;
-      });
-    }
-    if (haloRef.current) {
-      haloRef.current.style.background =
-        `radial-gradient(circle, ${accent}60 0%, transparent 68%)`;
-    }
-  }, [currentTheme]);
-
   return (
-    <div
-      className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden"
-      aria-hidden="true"
-      style={{ mixBlendMode: 'normal' }}
-    >
-      {/* Soft ambient halo */}
+    <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden select-none">
+      {/* Outer Magnetic Reticle Ring */}
       <div
-        ref={haloRef}
+        ref={followerRef}
+        className="absolute top-0 left-0 rounded-full border border-dashed flex items-center justify-center transition-opacity duration-200"
         style={{
-          position: 'absolute',
-          top: 0, left: 0,
-          width: 64, height: 64,
-          borderRadius: '50%',
+          width: '24px',
+          height: '24px',
           opacity: 0,
-          transition: 'opacity 0.2s ease',
-          willChange: 'transform',
-          background: `radial-gradient(circle, ${currentTheme.accent}60 0%, transparent 68%)`
-        }}
-      />
-
-      {/* Targeting ring with corner ticks */}
-      <div
-        ref={outerRef}
-        style={{
-          position: 'absolute',
-          top: 0, left: 0,
-          width: 28, height: 28,
-          borderRadius: '50%',
-          border: `1.5px solid ${currentTheme.accent}`,
-          boxShadow: `0 0 16px ${currentTheme.glowColor}`,
-          opacity: 0,
-          transition: 'width 0.12s ease, height 0.12s ease, border-color 0.3s ease, box-shadow 0.3s ease',
-          willChange: 'transform, width, height',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          borderColor: currentTheme.accent,
+          boxShadow: `0 0 12px ${currentTheme.glowColor}`,
+          willChange: 'transform, width, height'
         }}
       >
-        <i style={{ position:'absolute', top:'-3px', left:'50%', transform:'translateX(-50%)', width:'6px', height:'2px', borderRadius:'1px', backgroundColor: currentTheme.accent }} />
-        <i style={{ position:'absolute', bottom:'-3px', left:'50%', transform:'translateX(-50%)', width:'6px', height:'2px', borderRadius:'1px', backgroundColor: currentTheme.accent }} />
-        <i style={{ position:'absolute', left:'-3px', top:'50%', transform:'translateY(-50%)', width:'2px', height:'6px', borderRadius:'1px', backgroundColor: currentTheme.accent }} />
-        <i style={{ position:'absolute', right:'-3px', top:'50%', transform:'translateY(-50%)', width:'2px', height:'6px', borderRadius:'1px', backgroundColor: currentTheme.accent }} />
+        {/* Subtle crosshair brackets */}
+        <span className="absolute -top-1 w-1 h-0.5" style={{ backgroundColor: currentTheme.accent }} />
+        <span className="absolute -bottom-1 w-1 h-0.5" style={{ backgroundColor: currentTheme.accent }} />
+        <span className="absolute -left-1 w-0.5 h-1" style={{ backgroundColor: currentTheme.accent }} />
+        <span className="absolute -right-1 w-0.5 h-1" style={{ backgroundColor: currentTheme.accent }} />
       </div>
 
-      {/* Inner hot dot — zero lag */}
+      {/* Tiny Laser Dot Center */}
       <div
         ref={dotRef}
+        className="absolute top-0 left-0 w-1.5 h-1.5 rounded-full transition-opacity duration-200"
         style={{
-          position: 'absolute',
-          top: 0, left: 0,
-          width: 8, height: 8,
-          borderRadius: '50%',
-          backgroundColor: currentTheme.primary,
-          boxShadow: `0 0 12px 4px ${currentTheme.primary}`,
           opacity: 0,
-          transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+          backgroundColor: currentTheme.primary,
+          boxShadow: `0 0 8px 1px ${currentTheme.primary}`,
           willChange: 'transform'
         }}
       />

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
+import { SpotlightCard } from './ui/SpotlightCard';
 
 export const EmblaThemeCarousel = () => {
   const { themesList, themeId, changeTheme, currentTheme } = useTheme();
@@ -49,7 +50,7 @@ export const EmblaThemeCarousel = () => {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" style={{ color: currentTheme.accent }} />
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-300">
-            DICE 1 CHARACTER SHOWCASE • EMBLA 3D SLIDER
+            DICE 1 CHARACTER SHOWCASE • 3D TILT SLIDER
           </span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -73,27 +74,24 @@ export const EmblaThemeCarousel = () => {
         <div className="flex gap-4 touch-pan-y">
           {themes.map((theme, idx) => {
             const isCurrent = theme.id === themeId;
-            const isCenter = idx === selectedIndex;
 
             return (
               <div
                 key={theme.id}
                 className="flex-[0_0_82%] sm:flex-[0_0_45%] md:flex-[0_0_32%] min-w-0"
               >
-                <motion.div
-                  whileHover={{ y: -6, scale: 1.02 }}
+                <SpotlightCard
+                  spotlightColor={theme.accent + '25'}
+                  glowColor={theme.glowColor}
                   onClick={() => {
                     changeTheme(theme.id);
                     sound.playClick();
                   }}
-                  className={`cursor-pointer rounded-2xl p-5 border transition-all duration-300 relative overflow-hidden backdrop-blur-xl ${
+                  className={`cursor-pointer p-5 transition-all duration-300 ${
                     isCurrent
                       ? 'border-white/40 shadow-2xl bg-zinc-900/90'
                       : 'border-white/10 bg-zinc-950/60 hover:border-white/20'
                   }`}
-                  style={{
-                    boxShadow: isCurrent ? `0 0 25px ${theme.glowColor}` : 'none'
-                  }}
                 >
                   {/* Top Character Pill */}
                   <div className="flex items-center justify-between mb-4">
@@ -130,7 +128,7 @@ export const EmblaThemeCarousel = () => {
                       </span>
                     )}
                   </div>
-                </motion.div>
+                </SpotlightCard>
               </div>
             );
           })}

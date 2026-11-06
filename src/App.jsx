@@ -7,6 +7,7 @@ import { HeroBanner } from './components/HeroBanner';
 import { EmblaThemeCarousel } from './components/EmblaThemeCarousel';
 import { StatsCounter } from './components/StatsCounter';
 import { DiceRollerModal } from './components/DiceRollerModal';
+import { SidebarDrawer } from './components/SidebarDrawer';
 import { Footer } from './components/Footer';
 
 // Problem Statements
@@ -20,6 +21,7 @@ import { PhishProtocol } from './components/problems/PhishProtocol';
 export const App = () => {
   const { problemId, currentProblem, currentTheme } = useTheme();
   const [diceModalOpen, setDiceModalOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
 
   const scrollToApp = () => {
@@ -54,8 +56,18 @@ export const App = () => {
       {/* Dynamic Background FX (Canvas particles, Mesh glowing blobs, CRT scanline) */}
       <BackgroundFX />
 
-      {/* Header Navigation */}
-      <Navbar onOpenDiceModal={() => setDiceModalOpen(true)} />
+      {/* Header Navigation (Floating Benchmark Pill) */}
+      <Navbar
+        onOpenDiceModal={() => setDiceModalOpen(true)}
+        onOpenSidebar={() => setSidebarOpen(true)}
+      />
+
+      {/* Cyber HUD Sidebar Drawer */}
+      <SidebarDrawer
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onOpenDiceModal={() => setDiceModalOpen(true)}
+      />
 
       {/* Main Content Area */}
       <main className="relative z-10">

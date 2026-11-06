@@ -1,397 +1,285 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Dice5, Volume2, VolumeX, Monitor, Clock, ChevronDown,
-  Search, Command, X, Sparkles, Zap
+  Search, Command, X, Github, Linkedin, Mail, ArrowRight,
+  Dice5, Volume2, VolumeX, Monitor, Clock, Menu
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
 
-export const Navbar = ({ onOpenDiceModal }) => {
+export const Navbar = ({ onOpenDiceModal, onOpenSidebar }) => {
   const {
     currentTheme, currentProblem, isMuted, toggleSound,
     crtEnabled, toggleCrt, themesList, problemsList,
     themeId, problemId, changeTheme, changeProblem
   } = useTheme();
 
-  const [secondsLeft, setSecondsLeft] = useState(3600);
-  const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const searchRef = useRef(null);
-  const dropRef = useRef(null);
+  const searchInputRef = useRef(null);
 
-  // Sprint timer — 60 min countdown
+  // Auto focus search input
   useEffect(() => {
-    const t = setInterval(() =>
-      setSecondsLeft(s => (s > 0 ? s - 1 : 0)), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Scroll-based glass depth
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
-
-  // Auto-focus search
-  useEffect(() => {
-    if (searchOpen) setTimeout(() => searchRef.current?.focus(), 50);
+    if (searchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
   }, [searchOpen]);
 
-  // Close dropdown on outside click
+  // ⌘K / Ctrl+K keyboard shortcut
   useEffect(() => {
-    const fn = e => {
-      if (dropRef.current && !dropRef.current.contains(e.target))
-        setDropdownOpen(false);
-    };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
-  }, []);
-
-  // ⌘K / Ctrl+K  →  toggle search
-  useEffect(() => {
-    const fn = e => {
+    const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen(v => !v);
+        setSearchOpen((prev) => !prev);
       }
-      if (e.key === 'Escape') { setSearchOpen(false); setDropdownOpen(false); }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+      }
     };
-    window.addEventListener('keydown', fn);
-    return () => window.removeEventListener('keydown', fn);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const fmt = s => {
-    const m = Math.floor(s / 60).toString().padStart(2, '0');
-    const sc = (s % 60).toString().padStart(2, '0');
-    return `${m}:${sc}`;
-  };
-
-  const urgent = secondsLeft < 600;
-
-  const searchResults = searchQuery.length > 1
+  const searchResults = searchQuery.length > 0
     ? [
         ...Object.values(themesList)
-          .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
-          .map(t => ({ kind: 'theme', item: t })),
+          .filter((t) => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          .map((t) => ({ kind: 'theme', item: t })),
         ...Object.values(problemsList)
-          .filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()))
-          .map(p => ({ kind: 'problem', item: p })),
+          .filter((p) => p.title.toLowerCase().includes(searchQuery.toLowerCase()))
+          .map((p) => ({ kind: 'problem', item: p }))
       ]
     : [];
 
   return (
     <>
-      {/* ════════════════════════════════════════
-          NAVBAR — floating pill style like reference
-      ════════════════════════════════════════ */}
-      <header
-        className="sticky top-0 z-40 w-full"
-        style={{
-          background: scrolled
-            ? 'rgba(4,4,8,0.94)'
-            : 'rgba(4,4,8,0.60)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderBottom: `1px solid ${scrolled ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.03)'}`,
-          transition: 'background 0.4s ease, border-color 0.4s ease',
-        }}
-      >
-        <div className="max-w-[1360px] mx-auto px-5 sm:px-8 h-[62px] flex items-center justify-between gap-4">
-
-          {/* ── LEFT: Logo + live theme badge ── */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Logo mark */}
-            <div className="flex items-center gap-1 select-none">
-              <span className="font-black text-[22px] tracking-tight text-white font-cyber leading-none">
-                RH
-              </span>
-              <span
-                className="font-black text-[22px] tracking-tight leading-none font-cyber"
-                style={{
-                  background: `linear-gradient(135deg, ${currentTheme.accent} 0%, ${currentTheme.primary} 100%)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                .0
-              </span>
-              {/* Pulsing accent dot (like "SR." reference) */}
-              <span
-                className="w-1.5 h-1.5 rounded-full ml-0.5 animate-pulse"
-                style={{ backgroundColor: currentTheme.accent }}
-              />
-            </div>
-
-            {/* Animated character badge */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={themeId}
-                initial={{ opacity: 0, y: -6, scale: 0.88 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 4, scale: 0.9 }}
-                transition={{ duration: 0.22 }}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11px] font-semibold tracking-wide border"
-                style={{
-                  background: `${currentTheme.accent}18`,
-                  borderColor: `${currentTheme.accent}45`,
-                  color: currentTheme.accent,
-                }}
-              >
-                <span className="text-sm leading-none">{currentTheme.mascot}</span>
-                <span>{currentTheme.name}</span>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* ── CENTER: Nav links (reference-matched minimal style) ── */}
-          <nav className="hidden md:flex items-center">
-            {/* Theme dropdown — Dice 1 */}
-            <div className="relative" ref={dropRef}>
-              <button
-                onClick={() => { setDropdownOpen(v => !v); sound.playHover(); }}
-                className="flex items-center gap-1 px-4 py-2 rounded-lg text-[13.5px] font-medium text-zinc-400 hover:text-white transition-colors duration-150 group relative"
-              >
-                Dice 1
-                <ChevronDown
-                  className="w-3.5 h-3.5 transition-transform duration-200"
-                  style={{ transform: dropdownOpen ? 'rotate(180deg)' : '' }}
-                />
-                <span
-                  className="absolute bottom-1.5 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center"
-                  style={{ backgroundColor: currentTheme.accent }}
-                />
-              </button>
-
-              <AnimatePresence>
-                {dropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.14 }}
-                    className="absolute top-full left-0 mt-2 w-56 rounded-2xl border border-white/10 shadow-2xl overflow-hidden py-1"
-                    style={{ background: 'rgba(8,8,14,0.98)', backdropFilter: 'blur(20px)' }}
-                  >
-                    {Object.values(themesList).map(t => (
-                      <button
-                        key={t.id}
-                        onClick={() => { changeTheme(t.id); setDropdownOpen(false); sound.playClick(); }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors duration-100"
-                      >
-                        <span className="text-lg leading-none">{t.mascot}</span>
-                        <div className="flex-1 min-w-0">
-                          <div
-                            className="text-[13px] font-semibold truncate"
-                            style={{ color: themeId === t.id ? t.accent : '#e4e4e7' }}
-                          >
-                            {t.name}
-                          </div>
-                          <div className="text-[10px] text-zinc-500 truncate">{t.badge}</div>
-                        </div>
-                        {themeId === t.id && (
-                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: t.accent }} />
-                        )}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Static nav links */}
-            {['Dice 2', 'Demo', 'Stack'].map(label => (
-              <button
-                key={label}
-                onClick={() => sound.playHover()}
-                className="relative px-4 py-2 rounded-lg text-[13.5px] font-medium text-zinc-400 hover:text-white transition-colors duration-150 group"
-              >
-                {label}
-                <span
-                  className="absolute bottom-1.5 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center"
-                  style={{ backgroundColor: currentTheme.accent }}
-                />
-              </button>
-            ))}
-          </nav>
-
-          {/* ── RIGHT: Controls cluster (reference-matched) ── */}
-          <div className="flex items-center gap-2 shrink-0">
-
-            {/* Search box — reference style with ⌘K hint */}
-            <button
-              onClick={() => { setSearchOpen(true); sound.playHover(); }}
-              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.09] text-[12.5px] text-zinc-500 hover:text-zinc-300 hover:border-white/[0.15] transition-all duration-200"
-              style={{ background: 'rgba(255,255,255,0.03)', minWidth: 148 }}
-            >
-              <Search className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>Search...</span>
-              <span className="ml-auto flex items-center gap-[3px] text-[10px] font-mono opacity-50">
-                <Command className="w-2.5 h-2.5" />K
-              </span>
-            </button>
-
-            {/* Sprint timer */}
-            <div
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[12px] font-mono font-bold transition-all duration-300"
+      {/* Floating Centered Pill Navbar — Exact Benchmark Match */}
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-5xl rounded-full bg-[#0a0a0f]/85 backdrop-blur-2xl border border-white/10 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.85)] transition-all">
+        
+        {/* Left: SR. Logo with Cyan Glowing Dot */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              sound.playHover();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center gap-1 group"
+          >
+            <span className="font-bold text-lg sm:text-xl text-white tracking-tight font-sans">
+              SR
+            </span>
+            <span
+              className="w-2 h-2 rounded-[2px] transition-all duration-300 group-hover:scale-125"
               style={{
-                background: urgent ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)',
-                borderColor: urgent ? 'rgba(239,68,68,0.45)' : 'rgba(255,255,255,0.09)',
-                color: urgent ? '#f87171' : '#71717a',
+                backgroundColor: '#22d3ee', // Cyan glowing dot
+                boxShadow: '0 0 10px #22d3ee'
               }}
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{
-                  backgroundColor: urgent ? '#f87171' : '#4ade80',
-                  animation: 'ping 1.4s cubic-bezier(0,0,0.2,1) infinite',
-                }}
-              />
-              <Clock className="w-3 h-3" />
-              {fmt(secondsLeft)}
-            </div>
-
-            {/* Icon cluster: CRT + Sound (grouped like reference) */}
-            <div className="flex items-center rounded-xl border border-white/[0.09] overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
-              <button
-                onClick={() => { toggleCrt(); sound.playHover(); }}
-                title={crtEnabled ? 'Disable CRT' : 'Enable CRT'}
-                className="p-2 hover:bg-white/8 transition-colors border-r border-white/[0.07]"
-                style={{ color: crtEnabled ? currentTheme.accent : '#52525b' }}
-              >
-                <Monitor className="w-4 h-4" />
-              </button>
-              <button
-                onClick={toggleSound}
-                title={isMuted ? 'Unmute' : 'Mute'}
-                className="p-2 hover:bg-white/8 transition-colors"
-                style={{ color: isMuted ? '#f87171' : '#4ade80' }}
-              >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {/* Avatar ring (reference — circular with accent ring, theme emoji inside) */}
-            <button
-              onClick={() => { onOpenDiceModal(); sound.playClick(); }}
-              title="Switch Theme / Problem"
-              className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-[17px] transition-transform hover:scale-110 active:scale-95 flex-shrink-0"
-              style={{
-                background: `${currentTheme.primary}28`,
-                border: `2px solid ${currentTheme.accent}`,
-                boxShadow: `0 0 14px ${currentTheme.glowColor}`,
-              }}
-            >
-              {currentTheme.mascot}
-            </button>
-
-            {/* Primary CTA — gradient pill (reference "Resume →" style but ours is ROLL DICE) */}
-            <button
-              onClick={() => { onOpenDiceModal(); sound.playCharge(); }}
-              className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold text-black overflow-hidden transition-all duration-200 hover:scale-105 active:scale-95 select-none"
-              style={{
-                background: `linear-gradient(135deg, ${currentTheme.accent} 0%, ${currentTheme.primary} 100%)`,
-                boxShadow: `0 4px 24px ${currentTheme.glowColor}`,
-              }}
-            >
-              {/* Shimmer sweep */}
-              <span
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
-                style={{ animation: 'shimmer 2.5s linear infinite' }}
-              />
-              <Dice5 className="w-4 h-4 relative z-10" />
-              <span className="relative z-10 hidden sm:inline">ROLL DICE</span>
-              <span className="relative z-10 sm:hidden">🎲</span>
-            </button>
-          </div>
+            />
+          </button>
         </div>
-      </header>
 
-      {/* ════════════════════════════════════════
-          SPOTLIGHT SEARCH OVERLAY
-      ════════════════════════════════════════ */}
+        {/* Center: Clean Nav Links (Desktop) */}
+        <div className="hidden md:flex items-center gap-1">
+          {[
+            { label: 'About', href: '#' },
+            { label: 'Projects', href: '#themes' },
+            { label: 'Skills', href: '#problems' },
+            { label: 'Experience', href: '#telemetry' },
+            { label: 'Contact', href: '#contact' },
+          ].map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              onClick={() => sound.playHover()}
+              className="px-3.5 py-1.5 rounded-full text-[13px] font-medium text-zinc-400 hover:text-white transition-colors duration-150 hover:bg-white/5"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+
+        {/* Right Section: Search, Avatar, Social Icons, and Action Button */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Search Pill Button */}
+          <button
+            onClick={() => {
+              sound.playClick();
+              setSearchOpen(true);
+            }}
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-zinc-400 hover:text-white hover:border-white/20 transition-all shadow-inner"
+          >
+            <Search className="w-3.5 h-3.5 text-zinc-500" />
+            <span className="text-[12px]">Search...</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/10 text-zinc-400 border border-white/10 ml-1">
+              ⌘K
+            </span>
+          </button>
+
+          {/* Avatar with Cyan Ring & Active Status Dot */}
+          <button
+            onClick={() => {
+              sound.playClick();
+              onOpenSidebar();
+            }}
+            title="Open Command Deck"
+            className="relative p-0.5 rounded-full border-2 border-cyan-400 hover:scale-110 transition-transform flex-shrink-0"
+            style={{
+              boxShadow: '0 0 12px rgba(34, 211, 238, 0.45)'
+            }}
+          >
+            <div className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center text-sm overflow-hidden text-white font-bold">
+              <span>{currentTheme.mascot}</span>
+            </div>
+            {/* Tiny green status dot */}
+            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 border border-black animate-pulse" />
+          </button>
+
+          {/* Social / Tool Circular Glass Buttons */}
+          <div className="hidden lg:flex items-center gap-1.5">
+            {/* GitHub */}
+            <a
+              href="https://github.com/sautrikroy17"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => sound.playHover()}
+              className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+              title="GitHub Profile"
+            >
+              <Github className="w-3.5 h-3.5" />
+            </a>
+
+            {/* LinkedIn */}
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => sound.playHover()}
+              className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+              title="LinkedIn Profile"
+            >
+              <Linkedin className="w-3.5 h-3.5" />
+            </a>
+
+            {/* Mail */}
+            <button
+              onClick={() => {
+                sound.playHover();
+                onOpenSidebar();
+              }}
+              className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+              title="Command Deck / Mail"
+            >
+              <Mail className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Action CTA Button: Resume / Roll Dice with subtle glow */}
+          <button
+            onClick={() => {
+              sound.playCharge();
+              onOpenDiceModal();
+            }}
+            className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all duration-200 flex items-center gap-1.5 shadow-lg hover:shadow-cyan-500/20 active:scale-95"
+            style={{
+              borderColor: 'rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            <span>Roll Dice</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Mobile Sidebar Trigger */}
+          <button
+            onClick={onOpenSidebar}
+            className="md:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </nav>
+
+      {/* Spotlight Search Modal (⌘K) */}
       <AnimatePresence>
         {searchOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[300] flex items-start justify-center px-4 pt-[13vh]"
-            style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)' }}
-            onClick={e => { if (e.target === e.currentTarget) setSearchOpen(false); }}
-          >
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4 bg-black/75 backdrop-blur-md">
             <motion.div
-              initial={{ opacity: 0, y: -18, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -18, scale: 0.96 }}
-              transition={{ duration: 0.18 }}
-              className="w-full max-w-[560px] rounded-2xl border border-white/[0.12] shadow-2xl overflow-hidden"
-              style={{ background: 'rgba(8,8,14,0.98)', backdropFilter: 'blur(24px)' }}
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="w-full max-w-xl rounded-2xl border border-white/10 bg-zinc-950 p-4 shadow-2xl text-white overflow-hidden"
             >
-              {/* Input */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07]">
-                <Search className="w-4.5 h-4.5 text-zinc-500 flex-shrink-0" />
+              {/* Search Bar Input */}
+              <div className="flex items-center gap-3 pb-3 border-b border-white/10">
+                <Search className="w-5 h-5 text-zinc-400" />
                 <input
-                  ref={searchRef}
+                  ref={searchInputRef}
+                  type="text"
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search themes, problems..."
-                  className="flex-1 bg-transparent text-[14px] text-white placeholder-zinc-500 outline-none"
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search 6 Themes or 6 Problem Statements..."
+                  className="flex-1 bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none"
                 />
                 <button
                   onClick={() => setSearchOpen(false)}
-                  className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/8 transition-colors"
+                  className="p-1 text-zinc-400 hover:text-white rounded-lg"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Results */}
-              <div className="max-h-72 overflow-y-auto">
-                {searchResults.length > 0 ? searchResults.map((r, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      if (r.kind === 'theme') changeTheme(r.item.id);
-                      else changeProblem(r.item.id);
-                      sound.playClick();
-                      setSearchOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.05] text-left transition-colors"
-                  >
-                    <span className="text-xl leading-none">{r.kind === 'theme' ? r.item.mascot : '🎯'}</span>
-                    <div className="min-w-0">
-                      <div className="text-[13px] font-semibold text-white truncate">
-                        {r.kind === 'theme' ? r.item.name : r.item.title}
+              {/* Search Results */}
+              <div className="my-3 max-h-64 overflow-y-auto space-y-1">
+                {searchResults.length > 0 ? (
+                  searchResults.map((res, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        sound.playClick();
+                        if (res.kind === 'theme') changeTheme(res.item.id);
+                        if (res.kind === 'problem') changeProblem(res.item.id);
+                        setSearchOpen(false);
+                      }}
+                      className="w-full p-2.5 rounded-xl hover:bg-white/10 text-left transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl">
+                          {res.kind === 'theme' ? res.item.mascot : '🎯'}
+                        </span>
+                        <div>
+                          <div className="text-xs font-bold text-white">
+                            {res.kind === 'theme' ? res.item.name : res.item.title}
+                          </div>
+                          <div className="text-[10px] text-zinc-400">
+                            {res.kind === 'theme' ? res.item.tagline : res.item.category}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[11px] text-zinc-500">
-                        {r.kind === 'theme' ? `Dice 1 — Theme ${r.item.id}` : `Dice 2 — PS ${r.item.id}`}
-                      </div>
-                    </div>
-                  </button>
-                )) : searchQuery.length > 1 ? (
-                  <div className="px-4 py-10 text-center text-sm text-zinc-500">
-                    No results for "{searchQuery}"
-                  </div>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                        {res.kind}
+                      </span>
+                    </button>
+                  ))
+                ) : searchQuery.length > 0 ? (
+                  <p className="text-xs text-zinc-500 text-center py-6">
+                    No matching themes or problems found.
+                  </p>
                 ) : (
-                  /* Default: quick theme grid */
-                  <div className="p-4 space-y-3">
-                    <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Quick Switch Themes</p>
+                  <div className="py-2 space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 block">
+                      Quick Themes (Dice 1):
+                    </span>
                     <div className="grid grid-cols-3 gap-2">
-                      {Object.values(themesList).map(t => (
+                      {Object.values(themesList).map((t) => (
                         <button
                           key={t.id}
-                          onClick={() => { changeTheme(t.id); sound.playClick(); setSearchOpen(false); }}
-                          className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/[0.07] hover:bg-white/[0.06] hover:border-white/[0.14] transition-all text-left"
-                          style={{ background: themeId === t.id ? `${t.accent}12` : '' }}
+                          onClick={() => {
+                            changeTheme(t.id);
+                            setSearchOpen(false);
+                          }}
+                          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-zinc-300 flex items-center gap-1.5"
                         >
-                          <span className="text-lg leading-none">{t.mascot}</span>
-                          <span className="text-[12px] font-medium text-zinc-300 truncate">{t.name}</span>
+                          <span>{t.mascot}</span>
+                          <span className="truncate">{t.name}</span>
                         </button>
                       ))}
                     </div>
@@ -399,27 +287,15 @@ export const Navbar = ({ onOpenDiceModal }) => {
                 )}
               </div>
 
-              {/* Footer keyboard hints */}
-              <div className="px-4 py-2.5 border-t border-white/[0.06] flex items-center gap-4 text-[11px] text-zinc-600 font-mono">
-                <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-white/10 text-zinc-400 text-[10px]">↑↓</kbd> navigate</span>
-                <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-white/10 text-zinc-400 text-[10px]">↵</kbd> select</span>
-                <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-white/10 text-zinc-400 text-[10px]">Esc</kbd> close</span>
+              {/* Modal Footer */}
+              <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                <span>Select to switch theme/problem immediately</span>
+                <span>ESC to close</span>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
-
-      {/* Shimmer keyframe */}
-      <style>{`
-        @keyframes shimmer {
-          0%   { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        @keyframes ping {
-          75%, 100% { transform: scale(1.8); opacity: 0; }
-        }
-      `}</style>
     </>
   );
 };
