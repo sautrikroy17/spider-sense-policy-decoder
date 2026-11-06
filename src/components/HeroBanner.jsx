@@ -9,17 +9,17 @@ import {
   ShieldCheck,
   Cpu,
   ArrowDown,
-  Sparkles,
+  Scale,
   Zap,
   Terminal,
-  ShieldAlert
+  Calculator
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
 import { useTextScramble } from '../utils/useTextScramble';
 import { SpotlightCard } from './ui/SpotlightCard';
 
-export const HeroBanner = ({ onScrollToApp, onScrollToSinister }) => {
+export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
   const { currentTheme, currentProblem } = useTheme();
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
 
@@ -44,7 +44,7 @@ export const HeroBanner = ({ onScrollToApp, onScrollToSinister }) => {
         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/30 backdrop-blur-md text-red-400">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
           <span className="font-bold uppercase tracking-wider">
-            SPIDER-SENSE ENGAGED // BRAND NEW DAY
+            SPIDER-SENSE 2.0 // BRAND NEW DAY
           </span>
         </span>
 
@@ -58,7 +58,7 @@ export const HeroBanner = ({ onScrollToApp, onScrollToSinister }) => {
         </span>
       </motion.div>
 
-      {/* Main Massive Hero Title */}
+      {/* Main Hero Title */}
       <div className="min-h-[140px] sm:min-h-[180px] flex flex-col items-center justify-center">
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight text-white max-w-5xl leading-none select-none font-cyber">
           <span className="drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)]">
@@ -78,10 +78,10 @@ export const HeroBanner = ({ onScrollToApp, onScrollToSinister }) => {
         transition={{ delay: 0.15 }}
         className="mt-4 text-sm sm:text-base md:text-lg text-zinc-300 max-w-3xl font-mono leading-relaxed"
       >
-        "Defeat the Sinisters of fine print. Obscure clauses, 40% room-rent traps, and hidden co-pays stop here. With great premiums comes zero ambiguity."
+        "Defeat the fine-print corporate syndicates. 40% room-rent traps, 48-hour emergency voids, and hidden co-pays stop here. With great policy premiums comes zero ambiguity."
       </motion.p>
 
-      {/* Comic Equalizer + Brand New Day Theme Player Pill */}
+      {/* Comic Spidey Quote + Brand New Day Theme Player Pill */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -143,16 +143,16 @@ export const HeroBanner = ({ onScrollToApp, onScrollToSinister }) => {
           <span>DECOMPILE A POLICY</span>
         </button>
 
-        {/* Secondary CTA: Meet the Sinister Six */}
+        {/* Secondary CTA: Aunt May Hospital Simulator */}
         <button
           onClick={() => {
             sound.playClick();
-            onScrollToSinister();
+            onScrollToMath();
           }}
           className="px-7 py-4 rounded-full font-bold text-sm tracking-wider uppercase bg-white/5 hover:bg-white/15 border border-white/20 text-white transition-all duration-200 flex items-center gap-2 hover:border-red-500/50 shadow-xl"
         >
-          <Zap className="w-4 h-4 text-cyan-400" />
-          <span>FINE-PRINT SINISTER SIX</span>
+          <Calculator className="w-4 h-4 text-amber-400" />
+          <span>AUNT MAY BILL SIMULATOR</span>
         </button>
       </motion.div>
 
@@ -193,11 +193,11 @@ export const HeroBanner = ({ onScrollToApp, onScrollToSinister }) => {
             </span>
             <span className="flex items-center gap-1.5">
               <Activity className="w-4 h-4 text-emerald-400" />
-              BACKEND: SUPABASE REAL-TIME CACHE
+              BACKEND: SUPABASE REAL-TIME DATABASE
             </span>
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-cyan-400" />
-              IRDAI STATUTORY REBUTTALS
+              IRDAI STATUTORY OMBUDSMAN REBUTTALS
             </span>
           </div>
         </SpotlightCard>

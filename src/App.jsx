@@ -6,7 +6,6 @@ import { BackgroundFX } from './components/BackgroundFX';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
 import { HangingSpiderman } from './components/HangingSpiderman';
-import { SinisterSixShowcase } from './components/SinisterSixShowcase';
 import { StatsCounter } from './components/StatsCounter';
 import { DiceRollerModal } from './components/DiceRollerModal';
 import { SidebarDrawer } from './components/SidebarDrawer';
@@ -29,12 +28,11 @@ export const App = () => {
   const [diceModalOpen, setDiceModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
-  const sinisterSectionRef = useRef(null);
 
   // Initialize Lenis Super Smooth Gliding Scroll
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.1,
+      duration: 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
       touchMultiplier: 1.5
@@ -57,9 +55,12 @@ export const App = () => {
     }
   };
 
-  const scrollToSinister = () => {
-    if (sinisterSectionRef.current) {
-      sinisterSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+  const scrollToMath = () => {
+    const el = document.getElementById('aunt-may-calculator');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else if (appSectionRef.current) {
+      appSectionRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -95,10 +96,10 @@ export const App = () => {
       {/* Custom Tactical Reticle Cursor with Web Shoot FX */}
       <CustomCursor />
 
-      {/* Real Cinematic Movie Frames Background with Web Filament Connections */}
+      {/* 100% Original Interactive Spider-Web Physics & Manhattan Horizon Background */}
       <BackgroundFX />
 
-      {/* Themed Floating Pill Navbar */}
+      {/* Spider-Sense Themed Floating Pill Navbar */}
       <Navbar
         onOpenDiceModal={() => setDiceModalOpen(true)}
         onOpenSidebar={() => setSidebarOpen(true)}
@@ -117,16 +118,11 @@ export const App = () => {
         {/* Cinematic Landing Page Hero */}
         <HeroBanner
           onScrollToApp={scrollToApp}
-          onScrollToSinister={scrollToSinister}
+          onScrollToMath={scrollToMath}
         />
 
         {/* Live Telemetry Bar */}
         <StatsCounter />
-
-        {/* The Fine-Print Sinister Six Gallery */}
-        <div id="sinister" ref={sinisterSectionRef}>
-          <SinisterSixShowcase onSelectVillain={scrollToApp} />
-        </div>
 
         {/* Interactive Problem Statement Engine (Policy Decoder Workstation) */}
         <section id="decoder" ref={appSectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 my-16">

@@ -498,7 +498,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
       </div>
 
       {/* Aunt May's Hospital Bill Simulator (Interactive Math Engine) */}
-      <div className="rounded-3xl p-6 sm:p-8 bg-zinc-900/90 border border-white/10 shadow-2xl space-y-6">
+      <div id="aunt-may-calculator" className="rounded-3xl p-6 sm:p-8 bg-zinc-900/90 border border-white/10 shadow-2xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
           <div>
             <div className="flex items-center gap-2">
