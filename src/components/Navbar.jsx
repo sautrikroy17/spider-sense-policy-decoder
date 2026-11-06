@@ -64,8 +64,8 @@ export const Navbar = ({ onOpenSidebar }) => {
 
             {/* Typography */}
             <div className="flex items-center gap-2 whitespace-nowrap">
-              <span className="font-cyber font-black text-sm tracking-wider text-white">
-                SPIDER-SENSE
+              <span className="font-cyber font-black text-sm sm:text-base tracking-wider text-white">
+                SPIDEY SENSE
               </span>
               <span className="hidden sm:inline-block text-[11px] font-mono text-zinc-400">
                 // Policy Defense
@@ -112,19 +112,27 @@ export const Navbar = ({ onOpenSidebar }) => {
         {/* RIGHT: Production-Grade Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
           
-          {/* Classic Spider-Man Theme Song Player (NO BOUNCE) */}
+          {/* Official Theme: Annihilate by Metro Boomin & Swae Lee */}
           <button
             onClick={handleToggleMusic}
-            title={musicActive ? 'Pause Spider-Man Theme' : 'Play Spider-Man Theme'}
+            title={musicActive ? 'Pause Annihilate' : 'Play Annihilate (Metro Boomin & Swae Lee)'}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all ${
               musicActive
                 ? 'bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'
                 : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white hover:bg-white/10'
             }`}
           >
-            <Music className="w-3.5 h-3.5" />
+            {musicActive ? (
+              <span className="flex items-center gap-0.5">
+                <span className="w-0.5 h-2.5 bg-white animate-pulse" />
+                <span className="w-0.5 h-3.5 bg-white animate-pulse delay-75" />
+                <span className="w-0.5 h-2 bg-white animate-pulse delay-150" />
+              </span>
+            ) : (
+              <Music className="w-3.5 h-3.5 text-red-400" />
+            )}
             <span className="hidden sm:inline">
-              {musicActive ? 'THEME [PLAYING]' : 'SPIDEY THEME'}
+              {musicActive ? 'ANNIHILATE [ON]' : 'ANNIHILATE ♫'}
             </span>
           </button>
 

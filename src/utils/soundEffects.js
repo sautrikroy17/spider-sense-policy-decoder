@@ -144,7 +144,7 @@ class SoundEngine {
     } catch {}
   }
 
-  // 🎵 Authentic OG Spider-Man Theme Song (1967 Classic)
+  // 🎵 Official Main Theme: "Annihilate" by Metro Boomin, Swae Lee, Lil Wayne, Offset (Spider-Verse)
   toggleSpiderTheme() {
     if (this.musicPlaying) {
       this.stopSpiderTheme();
@@ -159,8 +159,8 @@ class SoundEngine {
     if (this.muted) return;
     try {
       if (!this.audioEl) {
-        // Authentic Classic OG Spider-Man Theme (1967 iconic song)
-        this.audioEl = new Audio('/spidey/og-spiderman-theme.mp3');
+        // High-Fidelity Official Audio: "Annihilate" (Metro Boomin & Swae Lee)
+        this.audioEl = new Audio('/spidey/annihilate.m4a');
         this.audioEl.loop = true;
         this.audioEl.volume = 0.75;
       }
@@ -171,13 +171,23 @@ class SoundEngine {
           this.musicPlaying = true;
         })
         .catch(() => {
-          // Secondary fallback to 90s Animated or Orchestral
+          // Secondary fallback to .mp3 format or OG theme
           try {
-            this.audioEl = new Audio('/spidey/spiderman-animated-90s.mp3');
+            this.audioEl = new Audio('/spidey/annihilate.mp3');
             this.audioEl.loop = true;
             this.audioEl.volume = 0.75;
-            this.audioEl.play().catch(() => this.startSpiderThemeSynth());
-            this.musicPlaying = true;
+            this.audioEl
+              .play()
+              .then(() => {
+                this.musicPlaying = true;
+              })
+              .catch(() => {
+                this.audioEl = new Audio('/spidey/og-spiderman-theme.mp3');
+                this.audioEl.loop = true;
+                this.audioEl.volume = 0.75;
+                this.audioEl.play().catch(() => this.startSpiderThemeSynth());
+                this.musicPlaying = true;
+              });
           } catch {
             this.startSpiderThemeSynth();
           }

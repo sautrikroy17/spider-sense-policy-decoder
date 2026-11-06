@@ -6,7 +6,7 @@ import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
 import { HangingSpiderman } from './components/HangingSpiderman';
 import { SpideyWallPeeker } from './components/SpideyWallPeeker';
-import { SpideySentinel } from './components/SpideySentinel';
+import { SpideyVsVenomCombat } from './components/SpideyVsVenomCombat';
 import { StatsCounter } from './components/StatsCounter';
 import { SidebarDrawer } from './components/SidebarDrawer';
 import { ThemePreloader } from './components/ThemePreloader';
@@ -70,8 +70,8 @@ export const App = () => {
       {/* Spider-Man #2: Left Edge 3D Wall Crawler & Peeker */}
       <SpideyWallPeeker />
 
-      {/* Spider-Man #3: Right Corner 3D Sentinel & Jumper */}
-      <SpideySentinel />
+      {/* Spider-Man #3: Right Edge 3D Interactive Spider-Man vs Venom Combat Battle */}
+      <SpideyVsVenomCombat />
 
       {/* 3. Themed Scroll To Top Action Button (NO bounce) */}
       <ScrollToTop />

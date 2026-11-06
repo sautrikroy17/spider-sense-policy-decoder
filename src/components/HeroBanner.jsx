@@ -24,7 +24,7 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
 
   // Dynamic hacker text scramble
   const scrambledTitle = useTextScramble('POLICY DECODER', 20);
-  const scrambledTheme = useTextScramble('SPIDER-MAN', 25);
+  const scrambledTheme = useTextScramble('SPIDEY SENSE', 25);
 
   const handleToggleMusic = () => {
     const next = sound.toggleSpiderTheme();
@@ -43,7 +43,7 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/30 backdrop-blur-md text-red-400">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
           <span className="font-bold uppercase tracking-wider">
-            SPIDER-SENSE // AI POLICY FORENSICS
+            SPIDEY SENSE // AI POLICY FORENSICS
           </span>
         </span>
 
@@ -98,7 +98,7 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
           className="ml-2 pl-3 border-l border-white/20 flex items-center gap-1.5 text-xs font-bold font-mono text-red-400 hover:text-white transition-colors"
         >
           {isPlayingMusic ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-          <span>{isPlayingMusic ? 'THEME PLAYING' : 'PLAY SPIDEY THEME'}</span>
+          <span>{isPlayingMusic ? 'ANNIHILATE [PLAYING]' : 'PLAY ANNIHILATE ♫'}</span>
         </button>
       </motion.div>
 

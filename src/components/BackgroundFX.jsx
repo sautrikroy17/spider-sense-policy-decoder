@@ -10,6 +10,24 @@ import { motion } from 'framer-motion';
 export const BackgroundFX = () => {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const [parallax, setParallax] = useState({ x: 0, y: 0, rotateY: 0, rotateX: 0 });
+
+  useEffect(() => {
+    const onWindowMove = (e) => {
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const nx = (e.clientX / W - 0.5);
+      const ny = (e.clientY / H - 0.5);
+      setParallax({
+        x: nx * -26,
+        y: ny * -20,
+        rotateY: nx * 3.5,
+        rotateX: -ny * 3.5
+      });
+    };
+    window.addEventListener('mousemove', onWindowMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onWindowMove);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -129,19 +147,23 @@ export const BackgroundFX = () => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#050508]">
-      {/* 🎬 Real 4K Cinematic Spider-Man New York City Movie Backdrop with Smooth Camera Drift */}
+      {/* 🎬 Real 4K Cinematic Spider-Man New York City Movie Backdrop with 3D Depth Parallax */}
       <motion.div
         animate={{
-          scale: [1, 1.05, 1],
-          x: [0, -12, 0],
-          y: [0, -8, 0]
+          x: parallax.x,
+          y: parallax.y,
+          rotateY: parallax.rotateY,
+          rotateX: parallax.rotateX,
+          scale: [1.02, 1.05, 1.02]
         }}
         transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: 'easeInOut'
+          scale: { duration: 25, repeat: Infinity, ease: 'easeInOut' },
+          x: { type: 'spring', damping: 25, stiffness: 120 },
+          y: { type: 'spring', damping: 25, stiffness: 120 },
+          rotateY: { type: 'spring', damping: 25, stiffness: 120 },
+          rotateX: { type: 'spring', damping: 25, stiffness: 120 }
         }}
-        className="absolute -inset-8 bg-cover bg-center bg-no-repeat opacity-65 sm:opacity-75 filter brightness-105 contrast-110 saturate-[1.25] will-change-transform"
+        className="absolute -inset-10 bg-cover bg-center bg-no-repeat opacity-65 sm:opacity-75 filter brightness-105 contrast-110 saturate-[1.25] will-change-transform"
         style={{
           backgroundImage: `url('/spidey/bg-3.jpeg')`
         }}
