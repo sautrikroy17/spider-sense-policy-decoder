@@ -12,7 +12,8 @@ import {
   Scale,
   Zap,
   Terminal,
-  Calculator
+  Calculator,
+  UploadCloud
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
@@ -143,7 +144,21 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
           <span>DECOMPILE A POLICY</span>
         </button>
 
-        {/* Secondary CTA: Aunt May Hospital Simulator */}
+        {/* Secondary CTA: Upload Policy PDF */}
+        <button
+          onClick={() => {
+            sound.playThwip();
+            const el = document.getElementById('policy-uploader');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+            else onScrollToApp();
+          }}
+          className="px-7 py-4 rounded-full font-bold text-sm tracking-wider uppercase bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/40 text-cyan-300 transition-all duration-200 flex items-center gap-2 shadow-xl hover:scale-105"
+        >
+          <UploadCloud className="w-4 h-4 text-cyan-400" />
+          <span>UPLOAD POLICY PDF</span>
+        </button>
+
+        {/* Tertiary CTA: Aunt May Hospital Simulator */}
         <button
           onClick={() => {
             sound.playClick();

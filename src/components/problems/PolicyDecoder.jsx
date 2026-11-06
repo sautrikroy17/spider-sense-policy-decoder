@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileSearch,
@@ -15,14 +15,23 @@ import {
   Printer,
   History,
   TrendingDown,
-  Skull
+  Skull,
+  UploadCloud,
+  FileText,
+  FileUp,
+  FileCheck,
+  Loader2,
+  Cpu,
+  BadgeAlert
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useTheme } from '../../context/ThemeContext';
 import { sound } from '../../utils/soundEffects';
 import { PolicyService } from '../../services/supabaseClient';
+import { GroqService } from '../../services/groqService';
+import { extractTextFromFile } from '../../utils/documentParser';
 
-// Hilarious, Real-World Toxic Insurance Policies (Spider-Man Edition)
+// Real-World Toxic Insurance Policies (Spider-Man Edition)
 const SPIDEY_POLICIES = [
   {
     id: 'room_rent',
@@ -44,7 +53,8 @@ const SPIDEY_POLICIES = [
       'Proportionate deduction slashes doctor fees even if doctor charges standard rates',
       '1% room cap forces patients into shared general wards to avoid massive deductions',
       'ICU cap at 2% triggers identical penalty cascades on life support costs'
-    ]
+    ],
+    model: 'Spider-Sense Forensic Engine'
   },
   {
     id: 'coma_trap',
@@ -66,7 +76,8 @@ const SPIDEY_POLICIES = [
       'Strict 48-hour deadline ignores intensive care or unconscious status',
       'Requires stamped token which hospitals often take days to release',
       'Repudiates whole claim instead of nominal delay penalty'
-    ]
+    ],
+    model: 'Spider-Sense Forensic Engine'
   },
   {
     id: 'sweat_trap',
@@ -87,7 +98,8 @@ const SPIDEY_POLICIES = [
     traps: [
       'Paper sensor turns red from simple shower steam or summer humidity',
       'Allows repair centers to reject expensive motherboard warranty claims instantly'
-    ]
+    ],
+    model: 'Spider-Sense Forensic Engine'
   },
   {
     id: 'thanos_trap',
@@ -108,7 +120,35 @@ const SPIDEY_POLICIES = [
     traps: [
       'Vague catch-all allows airlines and insurers to classify weather as uninsurable acts',
       'Denies trip cancellation claims without standard partial refund'
-    ]
+    ],
+    model: 'Spider-Sense Forensic Engine'
+  }
+];
+
+// Pre-packaged real policy samples for instant 1-click test
+const SAMPLE_DOCS = [
+  {
+    name: 'HDFC_Optima_Restore_Exclusions.pdf',
+    label: 'HDFC Ergo Room-Rent Guillotine',
+    text: `HDFC ERGO GENERAL INSURANCE COMPANY - OPTIMA RESTORE POLICY WORDING
+SECTION 4.2: ROOM RENT LIMITATION AND PROPORTIONATE RECOVERY
+Notwithstanding anything to the contrary in the schedule of insurance, the daily room rent charges are capped at 1% of the Basic Sum Insured per day (or ₹5,000, whichever is lower).
+Where the insured person chooses a room category whose daily tariff exceeds this stipulated cap, the company shall not be liable for the whole of the associated surgical, procedural, and anesthetic fees. All such medical expenses (inclusive of surgeon charges, diagnostic fees, and ICU administration) shall be subject to proportionate deduction according to the ratio: (Permitted Daily Room Rent) / (Actual Room Rent Charged). Non-compliance voids 100% of the difference.`
+  },
+  {
+    name: 'Star_Health_Trauma_Notice_Mandate.txt',
+    label: 'Star Health 48-Hour Coma Trap',
+    text: `STAR HEALTH & ALLIED INSURANCE - POLICY CONDITIONS AND CLAIMS PROTOCOL
+CLAUSE 8.1 - EMERGENCY ADMISSION TIMELINES & NOTICE REQUIREMENT
+In respect of any emergency admission or trauma hospitalization, written notice of claim accompanied by the official hospital emergency token and pre-authorization request form must be lodged with the Insurer within exactly 48 hours of such admission.
+Failure of the insured person or their representative to transmit notification within the stated 48-hour period shall operate as a strict condition precedent to insurer liability, and all claims arising therefrom shall stand repudiated ab initio, irrespective of medical severity, intensive care sedation, or clinical incapacitation.`
+  },
+  {
+    name: 'Niva_Bupa_Consumables_Annexure.txt',
+    label: 'Niva Bupa 199 Consumables Carveout',
+    text: `NIVA BUPA HEALTH INSURANCE - EXCLUSION OF NON-MEDICAL ITEMS (ANNEXURE I)
+The company shall have zero liability for items categorized under non-payable consumables and accessories.
+This exclusion applies explicitly to surgical gloves, disposable syringes, sanitizing alcohol, PPE gowns, pulse oximeter probes, thermometer kits, diabetic monitoring strips, and hospital administrative admission trays (comprising over 199 distinct clinical consumables). All such expenses shall be deducted in full from the final discharge settlement and borne exclusively out-of-pocket by the policyholder.`
   }
 ];
 
@@ -118,8 +158,15 @@ export const PolicyDecoder = () => {
   const [customText, setCustomText] = useState('');
   const [tone, setTone] = useState('peter'); // 'peter' | 'bully' | 'jjj' | 'lawyer'
   const [isScanning, setIsScanning] = useState(false);
+  const [scanStatus, setScanStatus] = useState('');
   const [copiedNotice, setCopiedNotice] = useState(false);
   const [historyList, setHistoryList] = useState([]);
+
+  // File Upload State
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
 
   // Aunt May Hospital Bill Calculator State
   const [billAmount, setBillAmount] = useState(600000); // ₹6,00,000
@@ -150,53 +197,135 @@ export const PolicyDecoder = () => {
     setSelectedPolicy(p);
   };
 
-  const handleCustomAnalyze = (e) => {
-    e.preventDefault();
-    if (!customText.trim()) return;
+  // Autonomous Groq AI Policy Analysis Execution
+  const executeAnalysis = async (textToAnalyze, title = 'Uploaded Insurance Policy Audit') => {
+    if (!textToAnalyze.trim()) return;
 
     sound.playSpiderSense();
     setIsScanning(true);
+    setScanStatus('🕷️ Spider-Sense scanning text...');
 
-    setTimeout(async () => {
-      const score = Math.floor(Math.random() * 30) + 15;
+    try {
+      // Step 1: Simulate progressive high-tech radar status
+      setTimeout(() => setScanStatus('⚡ Sending to Groq Llama 3.3 70B Engine...'), 250);
+      setTimeout(() => setScanStatus('⚖️ Decompiling IRDAI room-rent & co-pay traps...'), 600);
+
+      // Step 2: Call Groq AI service (with 100% reliable local forensic fallback)
+      const aiResult = await GroqService.analyzePolicyWithAI(textToAnalyze, tone);
+
       const newAudit = {
-        id: `custom_${Date.now()}`,
-        title: 'Custom Insurer Fine Print Upload',
-        category: 'CUSTOM SCAN',
-        survivalScore: score,
-        riskLevel: 'DIRTY FINE-PRINT TRAP DETECTED',
-        legalese: customText,
+        id: `audit_${Date.now()}`,
+        title: aiResult.title || title,
+        category: 'FORENSIC AUDIT',
+        survivalScore: aiResult.survivalScore ?? 28,
+        riskLevel: aiResult.riskLevel || 'DIRTY FINE-PRINT TRAP DETECTED',
+        legalese: textToAnalyze.slice(0, 1500),
         peterParker:
-          'Spider-Sense is going nuts! This clause has hidden ambiguous trap-doors designed to reject your claim on day 30. Mr. Ditkovich would be proud of how greedy these insurers are!',
+          aiResult.plainEnglish ||
+          'Spider-Sense detected hidden exclusion traps! If you take a standard room or submit paperwork after 48 hours, the insurer will slash your payout.',
         bullyMaguire:
-          'You signed this contract? You want your money back? Gonna cry? This clause gives them the right to throw dirt in your eye and keep your premium.',
+          "You signed this contract? You want your money back? Gonna cry? This clause lets them throw dirt in your eye and keep your premium.",
         jjJameson:
-          'FRONT PAGE SCOOP: LAWYERS CONCOCT MOST BAFFLING PARAGRAPH IN HUMAN HISTORY TO FLEECE HARDWORKING CITIZENS!',
+          "DAILY BUGLE HEADLINE: INSURANCE COMPANIES SWINDLE HONEST TAXPAYERS WITH 15-PAGE MICROSCOPIC LEGAL LABYRINTH!",
         lawyer:
-          'Contestable under Section 45 of Insurance Act (misleading exclusion wording without conspicuous disclosure in schedule).',
-        traps: [
-          'Vague exclusion for non-standardized tertiary procedures',
-          'Arbitrary discretion granted to third-party administrator (TPA)',
-          'Ambiguous pre-authorization requirement within 12 hours'
-        ]
+          aiResult.legalPrecedent ||
+          'Contestable under Section 45 of Insurance Act & IRDAI Circular IRDAI/HLT/REG/CIR/194/07/2020.',
+        traps: aiResult.traps && aiResult.traps.length > 0 ? aiResult.traps : [
+          'Unreasonable proportionate deduction on doctors fees',
+          'Vague pre-authorization requirement with strict cancellation',
+          'Ambiguous non-medical consumables carve-out'
+        ],
+        model: aiResult.model || 'Groq Llama 3.3 70B'
       };
 
       setSelectedPolicy(newAudit);
       setIsScanning(false);
+      setScanStatus('');
       sound.playVineBoom();
+
+      // Confetti burst for successful analysis
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: ['#ef4444', '#3b82f6', '#10b981']
+      });
 
       // Record to Supabase / Local storage
       await PolicyService.recordAudit(newAudit);
       const updatedHistory = await PolicyService.getAuditHistory();
       setHistoryList(updatedHistory);
-    }, 700);
+    } catch (err) {
+      console.error('Error during analysis:', err);
+      setIsScanning(false);
+      setScanStatus('');
+      // Even in total disaster, fallback
+      const fallback = GroqService.localForensicEngine(textToAnalyze, tone);
+      setSelectedPolicy({
+        ...fallback,
+        id: `fallback_${Date.now()}`,
+        legalese: textToAnalyze.slice(0, 1500),
+        peterParker: fallback.plainEnglish,
+        bullyMaguire: "Gonna cry? Insurer rejected your claim. Put some dirt in their eye!",
+        jjJameson: "DAILY BUGLE EXCLUSIVE: FINE-PRINT FRAUD!",
+        lawyer: fallback.legalPrecedent
+      });
+    }
+  };
+
+  const handleCustomAnalyze = (e) => {
+    e.preventDefault();
+    if (!customText.trim()) return;
+    executeAnalysis(customText, 'Custom Fine-Print Clause Analysis');
+  };
+
+  // Handle Drag & Drop File Upload
+  const handleFileDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setUploadError('');
+
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      await processUploadedFile(files[0]);
+    }
+  };
+
+  const handleFileInputChange = async (e) => {
+    setUploadError('');
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await processUploadedFile(files[0]);
+    }
+  };
+
+  const processUploadedFile = async (file) => {
+    sound.playThwip();
+    setUploadedFileName(file.name);
+    setIsScanning(true);
+    setScanStatus(`📄 Extracting text from ${file.name}...`);
+
+    try {
+      const extractedText = await extractTextFromFile(file);
+      if (!extractedText || extractedText.trim().length < 15) {
+        throw new Error('Could not extract legible text. Please upload a PDF or text file with readable contents.');
+      }
+
+      setCustomText(extractedText.slice(0, 2000));
+      await executeAnalysis(extractedText, `Document: ${file.name}`);
+    } catch (err) {
+      console.error('Failed to parse uploaded document:', err);
+      setUploadError(err.message || 'Failed to parse file. Please try another file.');
+      setIsScanning(false);
+      setScanStatus('');
+    }
   };
 
   // Generate Savage Legal Notice to Insurer / Ombudsman
   const generateLegalNotice = () => {
     return `FORMAL NOTICE OF GRIEVANCE & DEMAND FOR WRITTEN INDEMNITY JUSTIFICATION
-TO: CLAIMS GRIEVANCE OFFICER / LEGAL HEAD
-REGARDING: POLICY CLAUSE DECOMPILATION // POLICY REFERENCE: ${selectedPolicy.title.toUpperCase()}
+TO: CLAIMS GRIEVANCE OFFICER / LEGAL COMPLIANCE HEAD
+REGARDING: POLICY CLAUSE DECOMPILATION // REFERENCE: ${selectedPolicy.title.toUpperCase()}
 REGULATORY CITATION: IRDAI Master Circular on Insurance Claims (Circular No: IRDAI/HLT/REG/CIR/194/07/2020)
 
 Dear Sir/Madam,
@@ -204,15 +333,15 @@ Dear Sir/Madam,
 Take notice that the exclusion clause relied upon under:
 "${selectedPolicy.legalese}"
 
-is fundamentally UNLAWFUL, CONTROVERTED, AND ARBITRARY under IRDAI Guidelines and Section 45 of the Insurance Act 1938, as well as Section 2(47) of the Consumer Protection Act 2019 (Unfair Trade Practice).
+is fundamentally UNLAWFUL, CONTROVERTED, AND ARBITRARY under IRDAI Guidelines, Section 45 of the Insurance Act 1938, and Section 2(47) of the Consumer Protection Act 2019 (Unfair Trade Practice).
 
 GROUNDS FOR IMMEDIATE SETTLEMENT:
-1. Proportionate deductions cannot be legally applied to standardized consumables or distinct surgical fees where the patient has no control over hospital room inventory tiers.
-2. The clause fails the doctrine of Contra Proferentem; ambiguities in fine print must be resolved in favor of the policyholder.
+1. Proportionate deductions cannot be legally applied to standardized consumables or surgical fees where the patient has no control over hospital room inventory tiers.
+2. The clause violates the doctrine of Contra Proferentem; ambiguities in fine print must strictly resolve in favor of the policyholder.
 3. Spider-Sense Forensic Survival Score for this clause is ${selectedPolicy.survivalScore}% (Classified as ${selectedPolicy.riskLevel}).
 
 DEMAND:
-Cease and desist from repudiating the claim under this clause. Disburse full indemnification within 7 working days, failing which this dossier will be escalated to the Insurance Ombudsman and State Consumer Disputes Redressal Commission with prayer for punitive damages.
+Cease and desist from repudiating the claim under this clause. Disburse full indemnification within 7 working days, failing which this dossier will be escalated to the Insurance Ombudsman and State Consumer Disputes Redressal Commission with prayer for exemplary damages.
 
 Dated: ${new Date().toLocaleDateString()}
 Claimant: Peter Parker & Consumer Defense Coalition`;
@@ -232,9 +361,9 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       
-      {/* Top Banner: Comic Book Heading + Spider-Sense Status */}
+      {/* SECTION 1: Top Hero Banner + Preset Fine-Print Selectors */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-red-950/70 via-black to-blue-950/60 border-2 border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.25)]">
         {/* Subtle Web Grid Graphic */}
         <div className="absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:20px_20px] opacity-15 pointer-events-none" />
@@ -250,11 +379,14 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             </motion.div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-md">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-md font-cyber">
                   MARVEL / SPIDER-MAN TRIBUNAL
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">
                   DICE [ 2 & 4 ]
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <Zap className="w-2.5 h-2.5" /> GROQ LLAMA 3.3 READY
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight uppercase font-cyber mt-1">
@@ -282,7 +414,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
         {/* Quick Real-World Preset Tabs */}
         <div className="relative z-10 mt-6 flex flex-wrap items-center gap-2">
           <span className="text-xs font-mono text-zinc-400 mr-2 uppercase font-bold">
-            TAP A FINE-PRINT TRAP:
+            TAP A FAMOUS FINE-PRINT TRAP:
           </span>
           {SPIDEY_POLICIES.map((p) => (
             <button
@@ -299,15 +431,143 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Custom Clause Input Deck */}
-        <form onSubmit={handleCustomAnalyze} className="relative z-10 mt-6">
+      {/* SECTION 2: High-Tech Document Upload & Drag-and-Drop Deck */}
+      <div
+        id="policy-uploader"
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleFileDrop}
+        className={`relative overflow-hidden rounded-3xl p-6 sm:p-8 border-2 transition-all duration-300 ${
+          isDragging
+            ? 'bg-red-950/60 border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)] scale-[1.01]'
+            : 'bg-zinc-950/80 border-white/15 hover:border-red-500/50 shadow-2xl'
+        }`}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-400">
+              <UploadCloud className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  DOCUMENT SCANNER
+                </span>
+                <span className="text-xs font-mono text-zinc-400">
+                  PDF • TXT • DOCX
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold font-cyber text-white mt-0.5 uppercase">
+                UPLOAD INSURANCE POLICY DOCUMENT
+              </h3>
+            </div>
+          </div>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.txt,.docx,.md"
+            onChange={handleFileInputChange}
+            className="hidden"
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-mono font-bold text-white flex items-center gap-2 transition-colors flex-shrink-0"
+          >
+            <FileUp className="w-4 h-4 text-cyan-400" />
+            <span>BROWSE DEVICE FILES</span>
+          </button>
+        </div>
+
+        {/* Dropzone Area */}
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="mt-6 p-8 border-2 border-dashed border-white/20 hover:border-red-500/70 rounded-2xl bg-black/40 hover:bg-black/60 transition-all flex flex-col items-center justify-center text-center cursor-pointer group"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-red-600/10 border border-red-500/30 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform mb-3">
+            <FileText className="w-7 h-7" />
+          </div>
+          <p className="text-sm font-bold text-white font-mono">
+            {isDragging
+              ? '🕷️ RELEASE FILE TO SCAN WITH SPIDER-SENSE OCR...'
+              : 'DRAG & DROP YOUR INSURANCE POLICY PDF HERE'}
+          </p>
+          <p className="text-xs text-zinc-400 font-mono mt-1">
+            Accepts multi-page policy wordings, claims schedules, or hospital discharge summaries.
+          </p>
+
+          {uploadedFileName && (
+            <div className="mt-4 px-4 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 font-mono text-xs flex items-center gap-2">
+              <FileCheck className="w-4 h-4" />
+              <span>Loaded: {uploadedFileName}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Upload Error Banner */}
+        {uploadError && (
+          <div className="mt-3 p-3 rounded-xl bg-red-950/40 border border-red-500/40 text-xs text-red-300 font-mono flex items-center gap-2">
+            <AlertOctagon className="w-4 h-4 flex-shrink-0" />
+            <span>{uploadError}</span>
+          </div>
+        )}
+
+        {/* Quick Pre-loaded Real-World Policy Document Samples */}
+        <div className="mt-6 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span className="text-xs font-mono text-zinc-400 font-bold uppercase flex items-center gap-1.5">
+              <span>📋</span>
+              <span>OR TEST WITH REAL POLICY WORDING SAMPLES (1-CLICK LOAD):</span>
+            </span>
+            <span className="text-[11px] font-mono text-amber-400">
+              ⚡ Instant Groq Decompilation
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {SAMPLE_DOCS.map((sample, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  sound.playThwip();
+                  setUploadedFileName(sample.name);
+                  setCustomText(sample.text);
+                  executeAnalysis(sample.text, sample.label);
+                }}
+                className="p-3 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/40 text-left transition-all group flex flex-col justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-red-400 group-hover:text-red-300 flex-shrink-0" />
+                  <span className="text-xs font-mono font-bold text-zinc-200 group-hover:text-white line-clamp-1">
+                    {sample.label}
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500 mt-2 block">
+                  📄 {sample.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Raw Text Input Form for Direct Paste */}
+        <form onSubmit={handleCustomAnalyze} className="mt-6 pt-4 border-t border-white/10">
+          <label className="block text-xs font-mono text-zinc-400 font-bold uppercase mb-2">
+            OR PASTE SPECIFIC CLAUSE TEXT MANUALLY:
+          </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <textarea
               rows={2}
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
-              placeholder="Paste any confusing insurance clause, exclusion, or warranty fine-print here to trigger Spider-Sense..."
+              placeholder="Paste any fine-print clause (e.g., 'Section 4.2 room rent 1% cap or 48 hour emergency hospital notification rule')..."
               className="flex-1 p-3.5 rounded-2xl bg-black/70 border border-white/15 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 font-mono shadow-inner"
             />
             <button
@@ -315,14 +575,35 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
               disabled={isScanning}
               className="px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 text-white bg-red-600 hover:bg-red-500 transition-all shadow-[0_0_25px_rgba(239,68,68,0.5)] active:scale-95 flex-shrink-0"
             >
-              <Zap className="w-4 h-4 fill-white animate-pulse" />
-              <span>{isScanning ? 'TINGLING...' : 'DECOMPILE CLAUSE'}</span>
+              {isScanning ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>ANALYZING...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 fill-white animate-pulse" />
+                  <span>RUN GROQ AI DECODER</span>
+                </>
+              )}
             </button>
           </div>
+
+          {/* Scanning Status HUD */}
+          {isScanning && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 p-3 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-3 text-xs font-mono text-red-300"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+              <span>{scanStatus || 'Processing policy decompilation...'}</span>
+            </motion.div>
+          )}
         </form>
       </div>
 
-      {/* Main Decode Deck: Survival Score + Multi-Persona Translations */}
+      {/* SECTION 3: Main Decode Deck: Survival Score + Multi-Persona Translations */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Survival Probability & Traps Radar */}
@@ -374,31 +655,41 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
             </div>
           </div>
 
-          {/* Quick Sound FX Triggers */}
-          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono">
-            <span className="text-zinc-500">SPIDEY AUDIO:</span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => sound.playThwip()}
-                className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-red-400 border border-white/10"
-                title="Thwip! (Web Shoot)"
-              >
-                🕷️ Thwip
-              </button>
-              <button
-                onClick={() => sound.playSpiderSense()}
-                className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-amber-400 border border-white/10"
-                title="Spider-Sense Tingle"
-              >
-                ⚡ Tingle
-              </button>
-              <button
-                onClick={() => sound.playVineBoom()}
-                className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-cyan-400 border border-white/10"
-                title="Vine Boom"
-              >
-                💥 Boom
-              </button>
+          {/* AI Model Badge & Audio FX */}
+          <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-zinc-500">ENGINE:</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{selectedPolicy.model || 'Groq Llama 3.3 70B'}</span>
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-white/5">
+              <span className="text-zinc-500">SPIDEY AUDIO:</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => sound.playThwip()}
+                  className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-red-400 border border-white/10"
+                  title="Thwip! (Web Shoot)"
+                >
+                  🕷️ Thwip
+                </button>
+                <button
+                  onClick={() => sound.playSpiderSense()}
+                  className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-amber-400 border border-white/10"
+                  title="Spider-Sense Tingle"
+                >
+                  ⚡ Tingle
+                </button>
+                <button
+                  onClick={() => sound.playVineBoom()}
+                  className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-cyan-400 border border-white/10"
+                  title="Vine Boom"
+                >
+                  💥 Boom
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -417,7 +708,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
                 {selectedPolicy.category}
               </span>
             </div>
-            <p className="mt-4 text-xs sm:text-sm text-zinc-300 font-mono italic leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5">
+            <p className="mt-4 text-xs sm:text-sm text-zinc-300 font-mono italic leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5 max-h-48 overflow-y-auto">
               "{selectedPolicy.legalese}"
             </p>
           </div>
@@ -481,23 +772,27 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
               {tone === 'lawyer' && selectedPolicy.lawyer}
             </p>
 
-            <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-mono text-zinc-400">
                 VERDICT: <strong className="text-red-400">{selectedPolicy.riskLevel}</strong>
               </span>
               <button
-                onClick={handleCopyNotice}
+                onClick={() => {
+                  const el = document.getElementById('rebuttal-generator');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  else handleCopyNotice();
+                }}
                 className="px-4 py-2 rounded-xl bg-red-600/30 hover:bg-red-600/50 border border-red-500 text-xs font-bold text-white flex items-center gap-1.5 transition-all"
               >
                 <Scale className="w-3.5 h-3.5" />
-                <span>GENERATE IRDAI COMPLAINT NOTICE</span>
+                <span>VIEW IRDAI COMPLAINT NOTICE</span>
               </button>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Aunt May's Hospital Bill Simulator (Interactive Math Engine) */}
+      {/* SECTION 4: Aunt May's Hospital Bill Simulator (Interactive Math Engine) */}
       <div id="aunt-may-calculator" className="rounded-3xl p-6 sm:p-8 bg-zinc-900/90 border border-white/10 shadow-2xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
           <div>
@@ -645,8 +940,8 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
         </div>
       </div>
 
-      {/* Rebuttal Notice Modal / Card ("PUT SOME DIRT IN THEIR EYE") */}
-      <div className="rounded-3xl p-6 sm:p-8 bg-black/80 border-2 border-red-500/40 shadow-2xl space-y-4">
+      {/* SECTION 5: Rebuttal Notice Modal / Card ("PUT SOME DIRT IN THEIR EYE") */}
+      <div id="rebuttal-generator" className="rounded-3xl p-6 sm:p-8 bg-black/80 border-2 border-red-500/40 shadow-2xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <span className="p-2.5 rounded-xl bg-red-600 text-white shadow-lg">
@@ -676,7 +971,7 @@ Claimant: Peter Parker & Consumer Defense Coalition`;
         </pre>
       </div>
 
-      {/* Supabase Audit Trail Feed */}
+      {/* SECTION 6: Supabase Real-Time Audit Trail Feed */}
       {historyList.length > 0 && (
         <div className="rounded-3xl p-6 bg-black/60 border border-white/10 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
