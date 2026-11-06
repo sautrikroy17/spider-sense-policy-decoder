@@ -3,12 +3,16 @@ import { motion } from 'framer-motion';
 import { Play, Sparkles, Shield, Terminal, ArrowDown } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
+import { ThreeHeroVisual } from './ThreeHeroVisual';
 
 export const HeroBanner = ({ onOpenDiceModal, onScrollToApp }) => {
   const { currentTheme, currentProblem } = useTheme();
 
   return (
-    <section className="relative pt-12 pb-16 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+    <section className="relative pt-8 pb-16 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+      {/* 3D React Three Fiber Core Visual */}
+      <ThreeHeroVisual />
+
       {/* Top Tag / Pill */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -148,3 +152,4 @@ export const HeroBanner = ({ onOpenDiceModal, onScrollToApp }) => {
     </section>
   );
 };
+

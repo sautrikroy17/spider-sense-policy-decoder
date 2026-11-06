@@ -4,6 +4,7 @@ import { CustomCursor } from './components/CustomCursor';
 import { BackgroundFX } from './components/BackgroundFX';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
+import { EmblaThemeCarousel } from './components/EmblaThemeCarousel';
 import { StatsCounter } from './components/StatsCounter';
 import { DiceRollerModal } from './components/DiceRollerModal';
 import { Footer } from './components/Footer';
@@ -63,6 +64,9 @@ export const App = () => {
           onScrollToApp={scrollToApp}
         />
 
+        {/* 3D Embla Theme Showcase Slider */}
+        <EmblaThemeCarousel />
+
         {/* Live Telemetry Bar */}
         <StatsCounter />
 
@@ -99,3 +103,4 @@ export const App = () => {
     </div>
   );
 };
+
