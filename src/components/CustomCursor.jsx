@@ -1,14 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { sound } from '../utils/soundEffects';
 
 /**
- * Tactical Combat Reticle Cursor
- * Exact 1:1 reproduction of hackthesinisters.vercel.app:
- * - Inner 30px rotating scanner with 4 corner brackets + intense glowing core
- * - Outer 50px counter-rotating HUD ring with 4 directional crosshair spikes
- * - body.cursor-hover triggers expansion of brackets, dashed HUD ring, and spike flare
- * - body.cursor-active triggers tactical burst ripple
- * - Fully reactive to currentTheme.accent and currentTheme.glowColor
+ * Tactical Combat Spider-Web Reticle Cursor
+ * - Exact 1:1 HackTheSinisters tactical reticle architecture
+ * - Real Spider-Web crosshair lines & spider emblem core
+ * - Dynamic Web Splat burst on click with THWIP sound effect!
+ * - Suppressed OS cursor globally
  */
 export const CustomCursor = () => {
   const { currentTheme } = useTheme();
@@ -19,6 +18,9 @@ export const CustomCursor = () => {
   const outlinePos = useRef({ x: -100, y: -100 });
   const isVisible = useRef(false);
   const rafId = useRef(null);
+
+  // Web Splat effect state
+  const [splats, setSplats] = useState([]);
 
   useEffect(() => {
     // Disable on touch devices
@@ -57,8 +59,16 @@ export const CustomCursor = () => {
       }
     };
 
-    const onMouseDown = () => {
+    const onMouseDown = (e) => {
       document.body.classList.add('cursor-active');
+      sound.playThwip();
+
+      // Add a cool web splat particle at click coordinates
+      const id = Date.now();
+      setSplats((prev) => [...prev.slice(-4), { id, x: e.clientX, y: e.clientY }]);
+      setTimeout(() => {
+        setSplats((prev) => prev.filter((s) => s.id !== id));
+      }, 600);
     };
 
     const onMouseUp = () => {
@@ -85,13 +95,12 @@ export const CustomCursor = () => {
     document.addEventListener('mouseleave', onMouseLeave);
     document.addEventListener('mouseenter', onMouseEnter);
 
-    // Smooth Lerp animation loop matching HackTheSinisters
     const animate = () => {
       const { x, y } = mouse.current;
 
-      // Trailing spring for outline
-      outlinePos.current.x += (x - outlinePos.current.x) * 0.14;
-      outlinePos.current.y += (y - outlinePos.current.y) * 0.14;
+      // Trailing spring for outer HUD outline
+      outlinePos.current.x += (x - outlinePos.current.x) * 0.15;
+      outlinePos.current.y += (y - outlinePos.current.y) * 0.15;
 
       const ox = outlinePos.current.x;
       const oy = outlinePos.current.y;
@@ -127,7 +136,6 @@ export const CustomCursor = () => {
 
   return (
     <>
-      {/* Dynamic Scoped CSS for Theme + HackTheSinisters Reticle */}
       <style>{`
         .tactical-cursor-dot {
           position: fixed;
@@ -146,8 +154,8 @@ export const CustomCursor = () => {
           position: fixed;
           top: 0;
           left: 0;
-          width: 54px;
-          height: 54px;
+          width: 56px;
+          height: 56px;
           z-index: 9999;
           pointer-events: none;
           opacity: 0;
@@ -161,7 +169,7 @@ export const CustomCursor = () => {
           height: 10px;
           border-color: ${accent} !important;
           filter: drop-shadow(0 0 8px ${accent});
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .reticle-b1 { top: 0; left: 0; border-top: 2.5px solid; border-left: 2.5px solid; }
@@ -174,7 +182,7 @@ export const CustomCursor = () => {
           height: 6px;
           background-color: ${accent};
           border-radius: 50%;
-          box-shadow: 0 0 15px ${accent}, 0 0 30px ${glow};
+          box-shadow: 0 0 16px ${accent}, 0 0 32px ${glow};
           transition: all 0.2s ease;
         }
 
@@ -186,7 +194,7 @@ export const CustomCursor = () => {
           display: flex;
           justify-content: center;
           align-items: center;
-          opacity: 0.7;
+          opacity: 0.75;
           transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -194,7 +202,7 @@ export const CustomCursor = () => {
           position: absolute;
           background-color: ${accent};
           box-shadow: 0 0 8px ${accent};
-          opacity: 0;
+          opacity: 0.8;
           transition: all 0.3s ease;
         }
 
@@ -203,16 +211,32 @@ export const CustomCursor = () => {
         .rsp-bottom { bottom: -8px; left: calc(50% - 1px); width: 2px; height: 8px; }
         .rsp-left { left: -8px; top: calc(50% - 1px); width: 8px; height: 2px; }
 
-        /* Hover States (when mouse is over buttons, cards, links) */
+        /* Web crosshair diagonals */
+        .web-cross-1 {
+          position: absolute;
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, ${accent}55, transparent);
+          transform: rotate(45deg);
+        }
+        .web-cross-2 {
+          position: absolute;
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, ${accent}55, transparent);
+          transform: rotate(-45deg);
+        }
+
+        /* Hover States */
         body.cursor-hover .reticle-bracket {
           border-color: #ffffff !important;
-          width: 14px;
-          height: 14px;
+          width: 15px;
+          height: 15px;
           filter: drop-shadow(0 0 16px ${accent});
         }
 
         body.cursor-hover .reticle-core {
-          transform: scale(1.8);
+          transform: scale(1.9);
           box-shadow: 0 0 30px ${accent}, 0 0 60px ${glow};
         }
 
@@ -266,18 +290,47 @@ export const CustomCursor = () => {
         </div>
       </div>
 
-      {/* Layer 2: Outer Counter-Rotating HUD Outline */}
+      {/* Layer 2: Outer Counter-Rotating HUD with Web Crosshairs */}
       <div ref={outlineRef} className="tactical-cursor-outline">
         <div
-          className="reticle-outline-main"
+          className="relative reticle-outline-main"
           style={{ animation: 'rotate-hud-reverse 10s linear infinite' }}
         >
+          {/* Faint Internal Web Filaments */}
+          <div className="web-cross-1" />
+          <div className="web-cross-2" />
+
+          {/* Tactical Spikes */}
           <div className="reticle-spike rsp-top" />
           <div className="reticle-spike rsp-right" />
           <div className="reticle-spike rsp-bottom" />
           <div className="reticle-spike rsp-left" />
         </div>
       </div>
+
+      {/* Dynamic Animated Web Splat on Click */}
+      {splats.map((s) => (
+        <div
+          key={s.id}
+          className="pointer-events-none fixed z-[10001] animate-ping"
+          style={{
+            top: s.y,
+            left: s.x,
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <svg viewBox="0 0 60 60" className="w-14 h-14 text-white opacity-80 filter drop-shadow-[0_0_10px_#ef4444]">
+            <path
+              d="M30,30 L10,12 M30,30 L50,12 M30,30 L52,48 M30,30 L8,48 M30,30 L30,5 M30,30 L30,55 M30,30 L5,30 M30,30 L55,30"
+              stroke="white"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+            <circle cx="30" cy="30" r="8" fill="none" stroke="white" strokeWidth="1.5" />
+            <circle cx="30" cy="30" r="16" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3,3" />
+          </svg>
+        </div>
+      ))}
     </>
   );
 };

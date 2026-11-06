@@ -24,16 +24,16 @@ export const THEMES = {
     id: 2,
     key: 'spiderman',
     name: 'Spider-Man',
-    tagline: 'Defeat the Sinisters. With Great Power Comes Great Responsiveness.',
+    tagline: "Decompile Shady Fine-Print. Put Some Dirt in the Insurer's Eye.",
     accent: '#ef4444', // Crimson Red
     primary: '#3b82f6', // Spider Blue
     secondary: '#06b6d4', // Web glow
     bgGradient: 'from-red-950/50 via-blue-950/40 to-black',
     glowColor: 'rgba(239, 68, 68, 0.45)',
     fontFamily: 'font-cyber',
-    badge: 'SPIDER-SENSE ENGAGED',
-    mascot: '🕸️',
-    quote: '"With great power comes great security and clean UI."',
+    badge: 'SPIDER-SENSE ENGAGED // BULLY MAGUIRE PROTOCOL',
+    mascot: '🕸️🕺',
+    quote: '"Rent? You\'ll get your rent when you fix this damn room-rent clause!"',
     cursorStyle: 'crosshair-reticle',
     heroEffect: 'web-grid',
     themeClass: 'theme-spiderman'
@@ -150,12 +150,12 @@ export const PROBLEMS = {
     id: 4,
     key: 'policy_decoder',
     title: 'Policy Decoder',
-    subtitle: 'Autonomous Legalese & Hidden Exclusion Decompiler',
-    description: 'De-obfuscate convoluted insurance policies. Highlight critical exclusion traps and calculate real-world claim success odds.',
+    subtitle: 'Spider-Sense Insurance Fine-Print Decompiler & Exclusion Radar',
+    description: 'Policyholders make uninformed decisions because insurance documents are written in legal and technical language, obscuring exclusions and conditions that directly affect claim outcomes.',
     category: 'LEGALTECH / CONSUMER DEFENSE',
     iconName: 'FileSearch',
-    accentColor: '#10b981',
-    targetAudience: 'Policyholders & Consumer Rights Advocates'
+    accentColor: '#ef4444',
+    targetAudience: 'Policyholders, Patients & Consumer Rights Advocates'
   },
   5: {
     id: 5,
@@ -184,8 +184,8 @@ export const PROBLEMS = {
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [themeId, setThemeId] = useState(2); // Default: Spider-Man (hero vibe)
-  const [problemId, setProblemId] = useState(6); // Default: Phish Protocol (high-tech CTF vibe)
+  const [themeId, setThemeId] = useState(2); // Dice 1 = 2: Spider-Man
+  const [problemId, setProblemId] = useState(4); // Dice 2 = 4: Policy Decoder
   const [isMuted, setIsMuted] = useState(false);
   const [crtEnabled, setCrtEnabled] = useState(true);
 

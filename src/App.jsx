@@ -4,6 +4,7 @@ import { CustomCursor } from './components/CustomCursor';
 import { BackgroundFX } from './components/BackgroundFX';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
+import { SinisterSixShowcase } from './components/SinisterSixShowcase';
 import { EmblaThemeCarousel } from './components/EmblaThemeCarousel';
 import { StatsCounter } from './components/StatsCounter';
 import { DiceRollerModal } from './components/DiceRollerModal';
@@ -27,10 +28,17 @@ export const App = () => {
   const [diceModalOpen, setDiceModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
+  const sinisterSectionRef = useRef(null);
 
   const scrollToApp = () => {
     if (appSectionRef.current) {
       appSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const scrollToSinister = () => {
+    if (sinisterSectionRef.current) {
+      sinisterSectionRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -54,19 +62,19 @@ export const App = () => {
 
   return (
     <div className={`min-h-screen text-slate-100 relative ${currentTheme.themeClass}`}>
-      {/* First Loading Screen (Access Granted Cyber Preloader) */}
+      {/* First Loading Screen (Access Granted Spider-Man Preloader) */}
       {loading && <ThemePreloader onFinish={() => setLoading(false)} />}
 
-      {/* Floating Scroll To Top Action Button (Benchmark Match) */}
+      {/* Floating Scroll To Top Action Button */}
       <ScrollToTop />
 
-      {/* Custom Tactical Reticle Cursor */}
+      {/* Custom Tactical Reticle Cursor with Web Shoot FX */}
       <CustomCursor />
 
-      {/* Dynamic Background FX (Canvas particles, Mesh glowing blobs, CRT scanline) */}
+      {/* Dynamic Background FX (Canvas particles, Spider-Web filaments, Mesh glowing blobs, CRT scanline) */}
       <BackgroundFX />
 
-      {/* Header Navigation (Floating Benchmark Pill) */}
+      {/* Header Navigation */}
       <Navbar
         onOpenDiceModal={() => setDiceModalOpen(true)}
         onOpenSidebar={() => setSidebarOpen(true)}
@@ -82,31 +90,34 @@ export const App = () => {
 
       {/* Main Content Area */}
       <main className="relative z-10">
+        {/* Cinematic Landing Page Hero */}
         <HeroBanner
-          onOpenDiceModal={() => setDiceModalOpen(true)}
           onScrollToApp={scrollToApp}
+          onScrollToSinister={scrollToSinister}
         />
-
-        {/* 3D Embla Theme Showcase Slider */}
-        <EmblaThemeCarousel />
 
         {/* Live Telemetry Bar */}
         <StatsCounter />
 
-        {/* Interactive Problem Statement Engine */}
-        <section ref={appSectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 my-12">
+        {/* The Fine-Print Sinister Six Gallery */}
+        <div ref={sinisterSectionRef}>
+          <SinisterSixShowcase onSelectVillain={scrollToApp} />
+        </div>
+
+        {/* Interactive Problem Statement Engine (Policy Decoder) */}
+        <section ref={appSectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 my-16">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: currentTheme.accent }} />
-              <h2 className="text-xs sm:text-sm font-mono font-bold tracking-widest uppercase text-zinc-400">
-                ACTIVE PROBLEM ENGINE // PS 0{currentProblem.id}
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+              <h2 className="text-xs sm:text-sm font-mono font-bold tracking-widest uppercase text-white">
+                TACTICAL WORKSPACE // PS 0{currentProblem.id}: {currentProblem.title}
               </h2>
             </div>
             <button
               onClick={() => setDiceModalOpen(true)}
-              className="text-xs font-mono text-zinc-400 hover:text-white transition-colors"
+              className="text-xs font-mono text-red-400 hover:text-white transition-colors"
             >
-              [Change Problem / Theme]
+              [🎲 Roll / Switch Dice]
             </button>
           </div>
 
@@ -115,6 +126,9 @@ export const App = () => {
             {renderActiveProblem()}
           </BlurFade>
         </section>
+
+        {/* 3D Embla Theme Showcase Carousel */}
+        <EmblaThemeCarousel />
       </main>
 
       {/* Dice Console Modal */}
@@ -128,4 +142,3 @@ export const App = () => {
     </div>
   );
 };
-
