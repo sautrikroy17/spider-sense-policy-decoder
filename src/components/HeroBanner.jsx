@@ -57,10 +57,10 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
         </span>
       </motion.div>
 
-      {/* Main Hero Title */}
-      <div className="min-h-[140px] sm:min-h-[180px] flex flex-col items-center justify-center">
+      {/* Main Hero Card Container with Backdrop Blur to prevent 3D background collision */}
+      <div className="relative p-6 sm:p-8 rounded-3xl bg-black/40 backdrop-blur-md border border-white/5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center max-w-4xl mx-auto">
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight text-white max-w-5xl leading-none select-none font-cyber">
-          <span className="drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)]">
+          <span className="drop-shadow-[0_10px_25px_rgba(0,0,0,0.9)]">
             {scrambledTitle}
           </span>
           <br />
@@ -68,17 +68,17 @@ export const HeroBanner = ({ onScrollToApp, onScrollToMath }) => {
             {scrambledTheme}
           </span>
         </h1>
-      </div>
 
-      {/* Hero Subtitle */}
-      <motion.p
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="mt-4 text-sm sm:text-base md:text-lg text-zinc-300 max-w-3xl font-mono leading-relaxed"
-      >
-        "Defeat the fine-print corporate syndicates. 40% room-rent traps, 48-hour emergency voids, and hidden co-pays stop here. With great premiums comes zero ambiguity."
-      </motion.p>
+        {/* Hero Subtitle */}
+        <motion.p
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-4 text-sm sm:text-base md:text-lg text-zinc-300 max-w-2xl font-mono leading-relaxed"
+        >
+          "Defeat the fine-print corporate syndicates. 40% room-rent traps, 48-hour emergency voids, and hidden co-pays stop here. With great premiums comes zero ambiguity."
+        </motion.p>
+      </div>
 
       {/* Famous Movie Quote Pill + Audio Player */}
       <motion.div

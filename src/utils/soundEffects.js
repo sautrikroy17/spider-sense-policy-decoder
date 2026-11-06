@@ -35,7 +35,8 @@ class SoundEngine {
         try {
           this.ctx = new AudioCtx();
         } catch {}
-        fetch('/spidey/web-shoot.mp3')
+        // Instant zero-latency pre-trimmed web shoot audio buffer
+        fetch('/spidey/web-shoot.wav')
           .then((res) => res.arrayBuffer())
           .then((buf) => {
             if (this.ctx) {
@@ -61,7 +62,7 @@ class SoundEngine {
       this.ctx.resume();
     }
     if (this.ctx && !this.webShootBuffer) {
-      fetch('/spidey/web-shoot.mp3')
+      fetch('/spidey/web-shoot.wav')
         .then((res) => res.arrayBuffer())
         .then((buf) => this.ctx.decodeAudioData(buf))
         .then((decoded) => {
@@ -206,7 +207,7 @@ class SoundEngine {
     } catch {}
   }
 
-  // 🎵 Official Main Theme: "Annihilate" by Metro Boomin, Swae Lee, Lil Wayne, Offset (Spider-Verse)
+  // 🎵 Official Main Theme: "Annihilate" by Metro Boomin & Swae Lee (Viral Instagram Verse Hook)
   toggleSpiderTheme() {
     if (this.musicPlaying) {
       this.stopSpiderTheme();
@@ -221,8 +222,8 @@ class SoundEngine {
     if (this.muted) return;
     try {
       if (!this.audioEl) {
-        // High-Fidelity Official Audio: "Annihilate" (Metro Boomin & Swae Lee)
-        this.audioEl = new Audio('/spidey/annihilate.m4a');
+        // High-Fidelity Viral Hook: "Annihilate" (Metro Boomin & Swae Lee)
+        this.audioEl = new Audio('/spidey/annihilate-hook.m4a');
         this.audioEl.loop = true;
         this.audioEl.volume = 0.75;
       }
@@ -233,9 +234,9 @@ class SoundEngine {
           this.musicPlaying = true;
         })
         .catch(() => {
-          // Secondary fallback to .mp3 format or OG theme
+          // Secondary fallback to standard path
           try {
-            this.audioEl = new Audio('/spidey/annihilate.mp3');
+            this.audioEl = new Audio('/spidey/annihilate.m4a');
             this.audioEl.loop = true;
             this.audioEl.volume = 0.75;
             this.audioEl

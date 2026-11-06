@@ -77,14 +77,14 @@ export const GwenClockTowerScroll = () => {
         </motion.div>
       </div>
 
-      {/* 2. Floating Story Freefall Stage (Positioned on the Right Edge) */}
+      {/* 2. Floating Story Freefall Stage (Positioned on the Left Edge for Perfect Symmetry) */}
       {!isMinimized && (
         <aside
           aria-label="Clock Tower Freefall Animation"
-          className="fixed top-24 right-4 sm:right-8 z-20 pointer-events-none w-72 sm:w-80 h-[520px] select-none hidden md:block"
+          className="fixed top-28 left-4 sm:left-6 z-20 pointer-events-none w-72 sm:w-80 h-[490px] select-none hidden lg:block"
         >
           {/* Outer Glass Frame */}
-          <div className="relative w-full h-full rounded-3xl bg-black/40 backdrop-blur-md border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(239,68,68,0.15)] overflow-hidden">
+          <div className="relative w-full h-full rounded-3xl bg-black/45 backdrop-blur-md border border-red-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_30px_rgba(239,68,68,0.2)] overflow-hidden pointer-events-auto">
             
             {/* Top Atmospheric Gradient */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-10" />
@@ -167,10 +167,10 @@ export const GwenClockTowerScroll = () => {
                 )}
               </motion.div>
 
-              {/* Bottom Depth Warning Altimeter */}
+              {/* Bottom Depth Warning Altimeter (NO BOUNCE) */}
               <div className="absolute bottom-3 inset-x-4 z-20 flex items-center justify-between text-[10px] font-mono text-zinc-400 bg-black/60 px-3 py-1.5 rounded-xl border border-white/5">
                 <span className="flex items-center gap-1">
-                  <ArrowDown className="w-3 h-3 text-red-500 animate-bounce" />
+                  <ArrowDown className="w-3 h-3 text-red-500 opacity-80" />
                   <span>SCROLL DOWN</span>
                 </span>
                 <span className="text-red-400 font-bold">{scrollPct}% DEPTH</span>

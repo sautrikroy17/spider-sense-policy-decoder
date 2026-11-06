@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { SpideyCity3D } from './SpideyCity3D';
 
 /**
  * Cinematic Spider-Man New York Movie Background Engine
@@ -169,11 +170,14 @@ export const BackgroundFX = () => {
           rotateY: { type: 'spring', damping: 25, stiffness: 120 },
           rotateX: { type: 'spring', damping: 25, stiffness: 120 }
         }}
-        className="absolute -inset-10 bg-cover bg-center bg-no-repeat opacity-65 sm:opacity-75 filter brightness-105 contrast-110 saturate-[1.25] will-change-transform"
+        className="absolute -inset-10 bg-cover bg-center bg-no-repeat opacity-45 sm:opacity-55 filter brightness-95 contrast-110 saturate-[1.1] will-change-transform"
         style={{
           backgroundImage: `url('/spidey/bg-3.jpeg')`
         }}
       />
+
+      {/* 🏙️ Real Interactive 3D WebGL Manhattan Skyline (Three.js & React-Three-Fiber) */}
+      <SpideyCity3D />
 
       {/* Cinematic Panavision 2.39:1 Letterbox Gradient & Soft Edge Vignette (Keeps Center & Text 100% Readable) */}
       <div
