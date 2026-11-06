@@ -7,7 +7,7 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { sound } from '../utils/soundEffects';
 
-export const SidebarDrawer = ({ isOpen, onClose, onOpenDiceModal }) => {
+export const SidebarDrawer = ({ isOpen, onClose, onOpenDiceModal, onReplayPreloader }) => {
   const {
     currentTheme, currentProblem, themesList, problemsList,
     themeId, problemId, changeTheme, changeProblem,
@@ -97,7 +97,16 @@ export const SidebarDrawer = ({ isOpen, onClose, onOpenDiceModal }) => {
                     className="flex-1 py-2 px-3 rounded-xl font-bold text-xs uppercase tracking-wider text-black flex items-center justify-center gap-1.5 shadow-md"
                     style={{ backgroundColor: currentTheme.accent }}
                   >
-                    <Dice5 className="w-3.5 h-3.5" /> Re-Roll Dice
+                    <Dice5 className="w-3.5 h-3.5" /> Re-Roll
+                  </button>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      if (onReplayPreloader) onReplayPreloader();
+                    }}
+                    className="py-2 px-3 rounded-xl font-bold text-xs uppercase tracking-wider border border-white/10 bg-white/5 hover:bg-white/15 text-zinc-300 flex items-center justify-center gap-1.5"
+                  >
+                    <Play className="w-3 h-3 text-cyan-400" /> Intro
                   </button>
                 </div>
               </div>
@@ -241,3 +250,4 @@ export const SidebarDrawer = ({ isOpen, onClose, onOpenDiceModal }) => {
     </AnimatePresence>
   );
 };
+

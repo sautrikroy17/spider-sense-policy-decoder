@@ -1,45 +1,52 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 export const CustomCursor = () => {
   const { currentTheme } = useTheme();
-  const followerRef = useRef(null);
+  const reticleRef = useRef(null);
   const dotRef = useRef(null);
+  const glowRef = useRef(null);
+
   const pos = useRef({ x: -100, y: -100 });
-  const followerPos = useRef({ x: -100, y: -100 });
+  const reticlePos = useRef({ x: -100, y: -100 });
   const isHovered = useRef(false);
   const isClicking = useRef(false);
   const isVisible = useRef(false);
   const rafId = useRef(null);
 
   useEffect(() => {
-    // Disable on touch screens
+    // Touch screens disabled
     if (window.matchMedia('(pointer: coarse)').matches) return;
 
     const onPointerMove = (e) => {
       pos.current = { x: e.clientX, y: e.clientY };
       if (!isVisible.current) {
         isVisible.current = true;
-        if (followerRef.current) followerRef.current.style.opacity = '1';
+        if (reticleRef.current) reticleRef.current.style.opacity = '1';
         if (dotRef.current) dotRef.current.style.opacity = '1';
+        if (glowRef.current) glowRef.current.style.opacity = '0.4';
       }
 
-      // Check for interactive targets
+      // Check if hovering over interactive element
       const target = e.target;
-      isHovered.current = !!target.closest('button, a, input, select, textarea, [role="button"], label, .clickable');
+      isHovered.current = !!target.closest(
+        'button, a, input, select, textarea, [role="button"], label, .clickable, .cursor-pointer'
+      );
     };
 
     const onPointerDown = () => { isClicking.current = true; };
     const onPointerUp = () => { isClicking.current = false; };
     const onMouseLeave = () => {
       isVisible.current = false;
-      if (followerRef.current) followerRef.current.style.opacity = '0';
+      if (reticleRef.current) reticleRef.current.style.opacity = '0';
       if (dotRef.current) dotRef.current.style.opacity = '0';
+      if (glowRef.current) glowRef.current.style.opacity = '0';
     };
     const onMouseEnter = () => {
       isVisible.current = true;
-      if (followerRef.current) followerRef.current.style.opacity = '1';
+      if (reticleRef.current) reticleRef.current.style.opacity = '1';
       if (dotRef.current) dotRef.current.style.opacity = '1';
+      if (glowRef.current) glowRef.current.style.opacity = '0.4';
     };
 
     window.addEventListener('pointermove', onPointerMove, { passive: true });
@@ -48,29 +55,36 @@ export const CustomCursor = () => {
     document.addEventListener('mouseleave', onMouseLeave);
     document.addEventListener('mouseenter', onMouseEnter);
 
-    // 120Hz-ready lerp animation loop
-    const LERP_FACTOR = 0.22; // Snappy, zero sluggishness
+    // High performance lerp loop
+    const LERP = 0.24;
 
     const render = () => {
       const { x, y } = pos.current;
+      const hovered = isHovered.current;
+      const clicking = isClicking.current;
 
-      // Laser dot tracks instantly at screen refresh rate
+      // Laser dot tracks instantly
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${x - 3}px, ${y - 3}px, 0) scale(${isClicking.current ? 1.6 : 1})`;
+        dotRef.current.style.transform = `translate3d(${x - 3}px, ${y - 3}px, 0) scale(${clicking ? 1.8 : hovered ? 1.2 : 1})`;
       }
 
-      // Magnetic reticle ring follows with smooth snappy spring
-      followerPos.current.x += (x - followerPos.current.x) * LERP_FACTOR;
-      followerPos.current.y += (y - followerPos.current.y) * LERP_FACTOR;
+      // Trailing ambient glow
+      if (glowRef.current) {
+        glowRef.current.style.transform = `translate3d(${x - 32}px, ${y - 32}px, 0)`;
+      }
 
-      const fx = followerPos.current.x;
-      const fy = followerPos.current.y;
-      const size = isHovered.current ? 40 : 24;
+      // Reticle with smooth spring follow
+      reticlePos.current.x += (x - reticlePos.current.x) * LERP;
+      reticlePos.current.y += (y - reticlePos.current.y) * LERP;
 
-      if (followerRef.current) {
-        followerRef.current.style.transform = `translate3d(${fx - size / 2}px, ${fy - size / 2}px, 0) scale(${isClicking.current ? 0.8 : 1}) rotate(${isHovered.current ? '45deg' : '0deg'})`;
-        followerRef.current.style.width = `${size}px`;
-        followerRef.current.style.height = `${size}px`;
+      const rx = reticlePos.current.x;
+      const ry = reticlePos.current.y;
+      const size = hovered ? 46 : 28;
+
+      if (reticleRef.current) {
+        reticleRef.current.style.transform = `translate3d(${rx - size / 2}px, ${ry - size / 2}px, 0) rotate(${hovered ? '45deg' : '0deg'}) scale(${clicking ? 0.75 : 1})`;
+        reticleRef.current.style.width = `${size}px`;
+        reticleRef.current.style.height = `${size}px`;
       }
 
       rafId.current = requestAnimationFrame(render);
@@ -90,34 +104,76 @@ export const CustomCursor = () => {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden select-none">
-      {/* Outer Magnetic Reticle Ring */}
+      {/* Ambient Radial Soft Glow */}
       <div
-        ref={followerRef}
-        className="absolute top-0 left-0 rounded-full border border-dashed flex items-center justify-center transition-opacity duration-200"
+        ref={glowRef}
+        className="absolute top-0 left-0 w-16 h-16 rounded-full transition-opacity duration-300"
         style={{
-          width: '24px',
-          height: '24px',
           opacity: 0,
-          borderColor: currentTheme.accent,
-          boxShadow: `0 0 12px ${currentTheme.glowColor}`,
+          background: `radial-gradient(circle, ${currentTheme.accent}70 0%, transparent 70%)`,
+          willChange: 'transform'
+        }}
+      />
+
+      {/* Tactical Crosshair Reticle (Exact match to hackthesinisters reference!) */}
+      <div
+        ref={reticleRef}
+        className="absolute top-0 left-0 transition-opacity duration-200"
+        style={{
+          width: '28px',
+          height: '28px',
+          opacity: 0,
           willChange: 'transform, width, height'
         }}
       >
-        {/* Subtle crosshair brackets */}
-        <span className="absolute -top-1 w-1 h-0.5" style={{ backgroundColor: currentTheme.accent }} />
-        <span className="absolute -bottom-1 w-1 h-0.5" style={{ backgroundColor: currentTheme.accent }} />
-        <span className="absolute -left-1 w-0.5 h-1" style={{ backgroundColor: currentTheme.accent }} />
-        <span className="absolute -right-1 w-0.5 h-1" style={{ backgroundColor: currentTheme.accent }} />
+        {/* Top-Left Bracket */}
+        <span
+          className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2"
+          style={{ borderColor: currentTheme.accent, filter: `drop-shadow(0 0 6px ${currentTheme.glowColor})` }}
+        />
+        {/* Top-Right Bracket */}
+        <span
+          className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2"
+          style={{ borderColor: currentTheme.accent, filter: `drop-shadow(0 0 6px ${currentTheme.glowColor})` }}
+        />
+        {/* Bottom-Left Bracket */}
+        <span
+          className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2"
+          style={{ borderColor: currentTheme.accent, filter: `drop-shadow(0 0 6px ${currentTheme.glowColor})` }}
+        />
+        {/* Bottom-Right Bracket */}
+        <span
+          className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2"
+          style={{ borderColor: currentTheme.accent, filter: `drop-shadow(0 0 6px ${currentTheme.glowColor})` }}
+        />
+
+        {/* Central Crosshair Tick Lines */}
+        <span
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-1"
+          style={{ backgroundColor: currentTheme.accent }}
+        />
+        <span
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-1"
+          style={{ backgroundColor: currentTheme.accent }}
+        />
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0.5"
+          style={{ backgroundColor: currentTheme.accent }}
+        />
+        <span
+          className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-0.5"
+          style={{ backgroundColor: currentTheme.accent }}
+        />
       </div>
 
-      {/* Tiny Laser Dot Center */}
+      {/* Center Laser Dot */}
       <div
         ref={dotRef}
         className="absolute top-0 left-0 w-1.5 h-1.5 rounded-full transition-opacity duration-200"
         style={{
           opacity: 0,
-          backgroundColor: currentTheme.primary,
-          boxShadow: `0 0 8px 1px ${currentTheme.primary}`,
+          backgroundColor: currentTheme.accent,
+          boxShadow: `0 0 10px 2px ${currentTheme.accent}`,
           willChange: 'transform'
         }}
       />

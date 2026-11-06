@@ -33,3 +33,4 @@ export const useTextScramble = (text, speed = 25) => {
 
   return displayText;
 };
+

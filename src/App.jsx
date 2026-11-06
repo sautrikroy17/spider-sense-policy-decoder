@@ -8,6 +8,9 @@ import { EmblaThemeCarousel } from './components/EmblaThemeCarousel';
 import { StatsCounter } from './components/StatsCounter';
 import { DiceRollerModal } from './components/DiceRollerModal';
 import { SidebarDrawer } from './components/SidebarDrawer';
+import { ThemePreloader } from './components/ThemePreloader';
+import { ScrollToTop } from './components/ScrollToTop';
+import { BlurFade } from './components/ui/BlurFade';
 import { Footer } from './components/Footer';
 
 // Problem Statements
@@ -20,6 +23,7 @@ import { PhishProtocol } from './components/problems/PhishProtocol';
 
 export const App = () => {
   const { problemId, currentProblem, currentTheme } = useTheme();
+  const [loading, setLoading] = useState(true);
   const [diceModalOpen, setDiceModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const appSectionRef = useRef(null);
@@ -50,7 +54,13 @@ export const App = () => {
 
   return (
     <div className={`min-h-screen text-slate-100 relative ${currentTheme.themeClass}`}>
-      {/* Custom Trailing Cursor */}
+      {/* First Loading Screen (Access Granted Cyber Preloader) */}
+      {loading && <ThemePreloader onFinish={() => setLoading(false)} />}
+
+      {/* Floating Scroll To Top Action Button (Benchmark Match) */}
+      <ScrollToTop />
+
+      {/* Custom Tactical Reticle Cursor */}
       <CustomCursor />
 
       {/* Dynamic Background FX (Canvas particles, Mesh glowing blobs, CRT scanline) */}
@@ -67,6 +77,7 @@ export const App = () => {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onOpenDiceModal={() => setDiceModalOpen(true)}
+        onReplayPreloader={() => setLoading(true)}
       />
 
       {/* Main Content Area */}
@@ -99,8 +110,10 @@ export const App = () => {
             </button>
           </div>
 
-          {/* Dynamic Problem Component */}
-          {renderActiveProblem()}
+          {/* Dynamic Problem Component with Blur-Fade entrance */}
+          <BlurFade key={problemId + currentTheme.name} duration={0.4} blur="8px">
+            {renderActiveProblem()}
+          </BlurFade>
         </section>
       </main>
 
