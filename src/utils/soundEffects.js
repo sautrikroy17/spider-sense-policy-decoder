@@ -6,6 +6,24 @@ class SoundEngine {
     this.musicPlaying = false;
     this.audioEl = null;
     this.synthTimeout = null;
+    this.webShootBuffer = null;
+    this.preloadBuffer();
+  }
+
+  preloadBuffer() {
+    if (typeof window !== 'undefined') {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        this.ctx = new AudioContext();
+        fetch('/spidey/web-shoot.mp3')
+          .then((res) => res.arrayBuffer())
+          .then((buf) => this.ctx.decodeAudioData(buf))
+          .then((decoded) => {
+            this.webShootBuffer = decoded;
+          })
+          .catch(() => {});
+      }
+    }
   }
 
   init() {
@@ -17,6 +35,15 @@ class SoundEngine {
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
+    }
+    if (this.ctx && !this.webShootBuffer) {
+      fetch('/spidey/web-shoot.mp3')
+        .then((res) => res.arrayBuffer())
+        .then((buf) => this.ctx.decodeAudioData(buf))
+        .then((decoded) => {
+          this.webShootBuffer = decoded;
+        })
+        .catch(() => {});
     }
   }
 
@@ -77,16 +104,27 @@ class SoundEngine {
     } catch {}
   }
 
-  // 🕸️ Authentic Spider-Man Web Shooter THWIP
+  // 🕸️ Authentic Spider-Man Web Shooter THWIP (0ms Instant Audio Dispatch)
   playThwip() {
     if (this.muted) return;
-    try {
-      const audio = new Audio('/spidey/web-shoot.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(() => this.playThwipSynth());
-    } catch {
-      this.playThwipSynth();
+    this.init();
+
+    // 1. Instant 0ms Web Audio API pre-decoded buffer source
+    if (this.ctx && this.webShootBuffer) {
+      try {
+        const source = this.ctx.createBufferSource();
+        source.buffer = this.webShootBuffer;
+        const gain = this.ctx.createGain();
+        gain.gain.value = 0.6;
+        source.connect(gain);
+        gain.connect(this.ctx.destination);
+        source.start(0);
+        return;
+      } catch {}
     }
+
+    // 2. Instant synthetic Web Audio noise burst fallback (<0.5ms)
+    this.playThwipSynth();
   }
 
   playThwipSynth() {
